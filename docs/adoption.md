@@ -30,7 +30,7 @@ cd /path/to/new-product && git add -A && git commit -m "Add agent harness"
 | 1 | FF only: instructions, agents, hooks, templates | Low |
 | 2 | `harness-ci.yml` + stack `product-ci` | Medium |
 | 3 | Eval CI + ruleset eval required | Medium |
-| 4 | Coding agent L1 on `task:docs` / `task:test-fix` | Low tasks first |
+| 4 | Coding agent L1 on `task:docs` / `task:test-fix` (CC-SD contract required) | Low tasks first |
 
 ```bash
 ./scripts/bootstrap-harness.sh --repo /path/to/existing --stack python --mode existing
@@ -47,6 +47,14 @@ cd /path/to/new-product && git add -A && git commit -m "Add agent harness"
 | `php` | `php.instructions.md` | `sample/php/` | `product-ci-php.yml` |
 
 Stack metadata is centralized in [`config/stacks.json`](../config/stacks.json). Bootstrap copies **only** the selected stack's profile and `product-ci-*` workflow.
+
+## CC-SD contract (L1 only in v1)
+
+Phase 4 L1 delegation uses a lightweight **Issue-embedded CC-SD contract** — not a separate spec file. v1 enforces the contract only for `task:docs` and `task:test-fix` at `autonomy:L1` via the `issue-spec-check` CI job. `feature-small`, `infra`, and `security-sensitive` are out of scope until a later version.
+
+Required Issue fields: `Goal`, `Non-goals`, `Constraints`, `Acceptance criteria`, `Rollback hints`. See [coding-agent-l1.md](coding-agent-l1.md). Enforcement uses Issue **labels** (`task:*`, `autonomy:*`), not the form dropdown alone.
+
+`issue-spec-check` is safe to keep always required: non-L1 and unlinked PRs exit successfully (warn/skip only).
 
 ## Sync from canonical template (Phase 4)
 

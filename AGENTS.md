@@ -4,6 +4,21 @@
 
 This repository (or a product repo using this harness) follows the agent harness architecture in `docs/arch.md`. Human judgment converges on **PR review only**.
 
+## CC-SD contract (L1 docs / test-fix)
+
+For `task:docs` and `task:test-fix` delegated at `autonomy:L1`, the Issue embeds a lightweight CC-SD contract with these canonical fields:
+
+| Field | Required |
+|-------|----------|
+| `Goal` | yes |
+| `Non-goals` | yes |
+| `Constraints` | yes |
+| `Acceptance criteria` | yes |
+| `Rollback hints` | yes |
+| `Additional context` | optional |
+
+CI enforces completeness via `issue-spec-check`. Enforcement uses Issue **labels** applied by triager, not the form dropdown alone. v1 does not cover `feature-small`, `infra`, or `security-sensitive`.
+
 ## Task classification
 
 Limits match `docs/operations.md` (CI enforces via `check-diff-size.mjs`).
@@ -20,9 +35,9 @@ Limits match `docs/operations.md` (CI enforces via `check-diff-size.mjs`).
 
 ## Agent roles
 
-- **triager**: Classify issues, assign `task:*` and `autonomy:*` labels (read only)
-- **implementer**: Implement with read/edit/test tools (L1 default)
-- **reviewer**: Review PRs, no edit permission
+- **triager**: Classify issues, verify CC-SD contract before L1 on docs/test-fix, assign `task:*` and `autonomy:*` labels (read only)
+- **implementer**: Execute against Issue CC-SD contract with read/edit/test tools (L1 default)
+- **reviewer**: Review PRs for requirement fit and non-goal preservation, no edit permission
 
 ## Out of scope (always human)
 

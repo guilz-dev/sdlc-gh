@@ -23,10 +23,11 @@
         "strict_required_status_checks_policy": true,
         "required_status_checks": [
           { "context": "harness-static" },
-          { "context": "diff-size" }
+          { "context": "diff-size" },
+          { "context": "issue-spec-check" }
         ]
       }
     }
   ],
-  "_comment": "Add product-ci-{stack} check matching your .harness-stack after bootstrap"
+  "_comment": "Add product-ci-{stack} check matching your .harness-stack after bootstrap. issue-spec-check is always safe as required: it skips non-L1 PRs and enforces CC-SD only for linked Issues labeled task:docs|test-fix + autonomy:L1."
 }

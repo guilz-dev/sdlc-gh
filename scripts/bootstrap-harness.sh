@@ -125,14 +125,15 @@ cp "$TEMPLATE_ROOT/.github/ruleset.harness-eval.example.json" "$REPO/.github/" 2
 
 # Scripts
 mkdir -p "$REPO/scripts/lib"
-for s in validate-harness.mjs check-diff-size.mjs select-eval-jobs.mjs \
+for s in validate-harness.mjs check-diff-size.mjs check-issue-spec.mjs select-eval-jobs.mjs \
   check-e2e-manifest.mjs validate-telemetry.mjs check-open-pr-limit.mjs \
-  test-hooks-scenarios.mjs harness-drift-report.mjs check-eval-score-drift.mjs \
-  run-e2e-bench.mjs; do
+  test-hooks-scenarios.mjs test-issue-spec-scenarios.mjs harness-drift-report.mjs \
+  check-eval-score-drift.mjs run-e2e-bench.mjs; do
   cp "$TEMPLATE_ROOT/scripts/$s" "$REPO/scripts/" 2>/dev/null || true
 done
 cp "$TEMPLATE_ROOT/scripts/lib/stacks.mjs" "$REPO/scripts/lib/" 2>/dev/null || true
 cp "$TEMPLATE_ROOT/scripts/lib/harness-ci-fragments.mjs" "$REPO/scripts/lib/" 2>/dev/null || true
+cp "$TEMPLATE_ROOT/scripts/lib/ccsd-contract.mjs" "$REPO/scripts/lib/" 2>/dev/null || true
 cp "$TEMPLATE_ROOT/scripts/trim-harness-ci.mjs" "$REPO/scripts/" 2>/dev/null || true
 cp "$TEMPLATE_ROOT/scripts/verify-bootstrap-stacks.sh" "$REPO/scripts/" 2>/dev/null || true
 chmod +x "$REPO/scripts/"*.mjs "$REPO/scripts/verify-bootstrap-stacks.sh" 2>/dev/null || true

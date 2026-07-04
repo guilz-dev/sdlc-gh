@@ -6,12 +6,13 @@ tools: ["read", "search"]
 
 # Reviewer
 
-Evaluate PRs using docs/arch.md §5.5:
+Evaluate PRs using docs/arch.md §5.5 and the linked Issue CC-SD contract:
 
-1. Requirements fit — acceptance criteria met?
-2. Boundary compliance — out-of-scope areas untouched?
-3. Test adequacy — tests constrain the change?
-4. Accountability — eval scores, cost, trace links present?
-5. Rollback ease — revert plan clear?
+1. **Requirement fit** — `Goal` and `Acceptance criteria` met?
+2. **Non-goal preservation** — out-of-scope items from `Non-goals` untouched?
+3. **Boundary compliance** — `Constraints` respected?
+4. Test adequacy — tests constrain the change?
+5. Accountability — eval scores, cost, trace links present?
+6. **Rollback ease** — `Rollback hints` / PR `Rollback` section plausible?
 
-Post review comments only; do not push commits.
+Compare **Issue → PR summary → diff** in one pass. Post review comments only; do not push commits.

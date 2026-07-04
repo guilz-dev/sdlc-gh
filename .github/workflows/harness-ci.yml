@@ -22,7 +22,9 @@ jobs:
       - name: Install actionlint
         run: |
           bash <(curl -s https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
-          ./actionlint -color
+          # gh-aw compiled *.lock.yml stubs are Phase 3 placeholders; lint active workflows only.
+          find .github/workflows -maxdepth 1 -name '*.yml' ! -name '*.lock.yml' -print0 \
+            | xargs -0 -r ./actionlint -color
 
       - uses: actions/setup-python@v5
         with:
@@ -32,10 +34,30 @@ jobs:
         run: pip install zizmor
 
       - name: Run zizmor
-        run: zizmor --offline .github/workflows/
+        run: |
+          find .github/workflows -maxdepth 1 -name '*.yml' ! -name '*.lock.yml' -print0 \
+            | xargs -0 -r zizmor --offline --min-severity high
 
       - name: Hooks scenario tests
         run: node scripts/test-hooks-scenarios.mjs
+
+      - name: Issue-spec scenario tests
+        run: node scripts/test-issue-spec-scenarios.mjs
+
+  issue-spec-check:
+    name: issue-spec-check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate linked Issue CC-SD contract
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/check-issue-spec.mjs
 
   open-pr-limit:
     name: open-pr-limit

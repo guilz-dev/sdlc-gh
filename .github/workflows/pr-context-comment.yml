@@ -21,11 +21,13 @@ jobs:
         shell: bash
         env:
           LANGFUSE_HOST: ${{ vars.LANGFUSE_HOST }}
+          BASE_REF: ${{ github.base_ref }}
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ', ') }}
         run: |
-          BASE="origin/${{ github.base_ref }}"
+          BASE="origin/${BASE_REF}"
           LOC=$(git diff --numstat "$BASE"...HEAD | awk '{a+=$1;d+=$2} END {print a+d+0}')
           FILES=$(git diff --name-only "$BASE"...HEAD | wc -l | tr -d ' ')
-          LABELS="${{ join(github.event.pull_request.labels.*.name, ', ') }}"
+          LABELS="${PR_LABELS}"
           RETRY=$(echo "$LABELS" | tr ',' '\n' | grep -o 'retry:[0-9]*' | head -1 || true)
           INS_SHA=$(git log -1 --format=%H -- .github/copilot-instructions.md AGENTS.md 2>/dev/null || echo "n/a")
           SKILLS_SHA=$(git log -1 --format=%H -- .github/skills 2>/dev/null || echo "n/a")
@@ -40,15 +42,17 @@ jobs:
             TRACE="_configure LANGFUSE_HOST; then search by repo=${{ github.repository }}, pr_number=${{ github.event.pull_request.number }}_"
           fi
           THREAT_STATUS="n/a"
-          echo "loc=$LOC" >> "$GITHUB_OUTPUT"
-          echo "files=$FILES" >> "$GITHUB_OUTPUT"
-          echo "labels=$LABELS" >> "$GITHUB_OUTPUT"
-          echo "retry=$RETRY" >> "$GITHUB_OUTPUT"
-          echo "ins_sha=$INS_SHA" >> "$GITHUB_OUTPUT"
-          echo "skills_sha=$SKILLS_SHA" >> "$GITHUB_OUTPUT"
-          echo "eval_score=$EVAL_SCORE" >> "$GITHUB_OUTPUT"
-          echo "trace=$TRACE" >> "$GITHUB_OUTPUT"
-          echo "threat_status=$THREAT_STATUS" >> "$GITHUB_OUTPUT"
+          {
+            echo "loc=$LOC"
+            echo "files=$FILES"
+            echo "labels=$LABELS"
+            echo "retry=$RETRY"
+            echo "ins_sha=$INS_SHA"
+            echo "skills_sha=$SKILLS_SHA"
+            echo "eval_score=$EVAL_SCORE"
+            echo "trace=$TRACE"
+            echo "threat_status=$THREAT_STATUS"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Post comment
         uses: actions/github-script@v7

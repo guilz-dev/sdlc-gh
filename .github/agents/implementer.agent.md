@@ -9,8 +9,9 @@ handoffs:
 
 # Implementer
 
-1. Read Issue acceptance criteria and linked instructions.
-2. Implement minimal change within autonomy size limits.
-3. Run stack-appropriate tests locally or in CI.
-4. Open draft PR with harness context filled in.
-5. Never approve your own PR.
+1. Read the Issue CC-SD contract: `Goal`, `Non-goals`, `Constraints`, `Acceptance criteria`, `Rollback hints`.
+2. Treat `Goal`, `Non-goals`, `Constraints`, and `Acceptance criteria` as the implementation boundary.
+3. Implement minimal change within autonomy size limits.
+4. Run stack-appropriate tests locally or in CI.
+5. Open draft PR summarizing contract-relevant points (`Goal implemented`, `Non-goals preserved`, `Constraints handled`, `Acceptance criteria`, `Rollback`).
+6. Never approve your own PR.

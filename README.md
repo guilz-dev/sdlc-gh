@@ -23,6 +23,44 @@ sdlc-gh addresses these with three design rules:
 
 The full architecture and rationale live in [docs/arch.md](docs/arch.md).
 
+## Architecture
+
+The harness is a **dual-loop control system**: a fast inner loop (agent + deterministic walls) and a slower outer loop (eval + harness revision).
+
+```mermaid
+flowchart LR
+    subgraph OUTER["Outer loop (daily–weekly)"]
+        EVAL[Eval / traces]
+        REVISE[Revise instructions / walls]
+    end
+    subgraph INNER["Inner loop (per task)"]
+        FF[Feed-forward<br/>instructions / agents / skills]
+        AGENT[Agent<br/>plan → act → test]
+        WALL[Walls<br/>CI / hooks / diff-size]
+    end
+    Issue[Issue + CC-SD] --> FF
+    FF --> AGENT --> WALL
+    WALL -- fail --> AGENT
+    WALL -- pass --> PR[Draft PR]
+    AGENT -.-> EVAL
+    PR -.-> EVAL
+    EVAL --> REVISE
+    REVISE --> FF
+```
+
+Layers as implemented in this repo (details in [docs/arch.md](docs/arch.md)):
+
+```mermaid
+flowchart TB
+    L0[L0 Governance<br/>rulesets · CODEOWNERS · labels]
+    L1[L1 Feed-forward<br/>instructions · agents · skills]
+    L2[L2 Execution<br/>coding agent · CLI · gh-aw stubs]
+    L3[L3 Walls<br/>harness-ci · product-ci · hooks]
+    L4[L4–L6 Observability · Eval · Outer loop<br/>Langfuse · eval-ci · nightly review stubs]
+    L0 --> L1 --> L2 --> L3 --> L4
+    L4 -. revise .-> L1
+```
+
 ## Quick start
 
 Requirements: a GitHub repository with Actions enabled; Node.js 18+ for basic local checks. Use Node.js 22 for full parity with CI, including all executable E2E verifiers.
@@ -60,7 +98,7 @@ git add -A && git commit -m "Add agent harness from sdlc-gh"
 The harness is inert until you complete these steps:
 
 1. **Sync labels** — run the `Sync labels` workflow once. The `task:*` / `autonomy:*` labels drive the diff-size gate
-2. **Protect the branch** — import [.github/ruleset.example.json](.github/ruleset.example.json) under *Settings → Rules*, making `harness-static`, `diff-size`, and your stack's product CI required checks
+2. **Protect the branch** — import [.github/ruleset.example.json](.github/ruleset.example.json) under *Settings → Rules*, making `harness-static`, `diff-size`, `issue-spec-check`, and your stack's product CI required checks (`issue-spec-check` always passes for non-L1 PRs; it enforces CC-SD only when the linked Issue has `task:docs` or `task:test-fix` and `autonomy:L1` labels)
 3. **Set CODEOWNERS** — replace `@your-org/harness-engineers` in [.github/CODEOWNERS](.github/CODEOWNERS) with a real team
 4. **Run the local checks** — see "Local checks" below to confirm your environment
 
@@ -94,19 +132,30 @@ Inside this template, sample code lives under `sample/{stack}/` and all product 
 
 ## How a task flows
 
-```text
-Issue filed (with acceptance criteria)
-    ↓
-triager classifies (task:* / autonomy:* labels)
-    ↓
-implementer works → draft PR
-    ↓
-walls: product-ci + harness-ci (tests / lint / diff size / hooks)
-    ↓
-eval-ci (only for PRs touching harness assets)
-    ↓
-human PR review (the single gate)
+```mermaid
+sequenceDiagram
+    participant Dev as Developer
+    participant Issue as Issue
+    participant Tri as triager
+    participant Imp as implementer
+    participant Wall as Walls (CI)
+    participant Eval as eval-ci
+    participant Rev as Reviewer
+
+    Dev->>Issue: CC-SD contract (L1 docs / test-fix)
+    Issue->>Tri: Classify task:* / autonomy:*
+    Tri->>Imp: Delegate (complete contract required)
+    Imp->>Wall: Draft PR
+    alt CI failure
+        Wall-->>Imp: Retry orchestrator (max 3)
+    else CI pass
+        Wall->>Eval: Harness asset changes only
+        Wall->>Rev: PR context comment
+        Rev->>Issue: Approve or request changes
+    end
 ```
+
+For `task:docs` and `task:test-fix` at `autonomy:L1`, the Issue embeds a lightweight CC-SD contract (`Goal`, `Non-goals`, `Constraints`, `Acceptance criteria`, `Rollback hints`). v1 does not cover `feature-small` or higher-risk classes. Details: [docs/coding-agent-l1.md](docs/coding-agent-l1.md).
 
 On CI failure, `agent-retry-orchestrator` applies retry labels (max 3 attempts; stops after the same failure signature twice; security failures escalate immediately). Canonical thresholds live in [docs/operations.md](docs/operations.md).
 

@@ -19,6 +19,8 @@ const PATHS = [
   ".github/labels.yml",
   "scripts/validate-harness.mjs",
   "scripts/check-diff-size.mjs",
+  "scripts/check-issue-spec.mjs",
+  "scripts/lib/ccsd-contract.mjs",
   "docs/operations.md",
 ];
 

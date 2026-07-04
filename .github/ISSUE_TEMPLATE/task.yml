@@ -1,15 +1,53 @@
 name: Task
-description: Agent-delegated work item with acceptance criteria
+description: Agent-delegated work item with CC-SD contract and acceptance criteria
 title: "[task]: "
 body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: One short paragraph describing what this task achieves.
+      placeholder: One short paragraph describing what this task achieves.
+    validations:
+      required: true
+
+  - type: textarea
+    id: non_goals
+    attributes:
+      label: Non-goals
+      description: Bullet list of what this task must not do or change.
+      placeholder: |
+        - Item the task must not do or change
+    validations:
+      required: true
+
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints
+      description: Bullet list of technical or policy limits.
+      placeholder: |
+        - Technical or policy limits (stack, paths, time)
+    validations:
+      required: true
+
   - type: textarea
     id: acceptance_criteria
     attributes:
       label: Acceptance criteria
-      description: Use concrete, testable conditions. These are copied into the PR review gate.
+      description: Checkbox or bullet list with testable outcomes. Copied into the PR review gate.
       placeholder: |
         - [ ] Criterion 1
         - [ ] Criterion 2
+    validations:
+      required: true
+
+  - type: textarea
+    id: rollback_hints
+    attributes:
+      label: Rollback hints
+      description: Short revert or undo guidance if the change must be rolled back.
+      placeholder: How to revert this change immediately if needed.
     validations:
       required: true
 
@@ -46,5 +84,6 @@ body:
     id: context
     attributes:
       label: Additional context
+      description: Optional background, links, or prior art.
     validations:
       required: false

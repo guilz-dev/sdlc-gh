@@ -1,0 +1,11 @@
+# Tag-pinned actions are acceptable for this harness template; hash-pin in product repos if required.
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        actions/*: ref-pin
+        github/*: ref-pin
+        dependabot/*: ref-pin
+        EndBug/*: ref-pin
+        ruby/*: ref-pin
+        shivammathur/*: ref-pin

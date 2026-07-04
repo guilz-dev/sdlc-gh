@@ -39,6 +39,8 @@ def test_agents_have_frontmatter_and_expected_tools():
 def test_issue_template_requires_acceptance_criteria_and_no_fixed_labels():
     text = read(".github/ISSUE_TEMPLATE/task.yml")
     assert "id: acceptance_criteria" in text
+    assert "id: goal" in text
+    assert "id: rollback_hints" in text
     assert "type: textarea" in text
     assert re.search(r"id: acceptance_criteria.*?required: true", text, re.S)
     assert "labels:" not in text
@@ -48,6 +50,7 @@ def test_pr_template_has_harness_context_and_rollback():
     text = read(".github/pull_request_template.md")
     assert "## Harness context" in text
     assert "## Rollback" in text
+    assert "## Goal implemented" in text
     assert "Trace link" in text
 
 
@@ -82,3 +85,103 @@ def test_retry_policy_matches_operations_doc():
     assert "const MAX_RETRIES = 3;" in orchestrator
     assert "Same failure signature | Stop after 2 consecutive identical" in operations
     assert "Same failure signature detected twice" in orchestrator
+
+
+def _parse_ccsd_exports() -> tuple[list[str], list[str], list[str]]:
+    """Read canonical CC-SD field names from scripts/lib/ccsd-contract.mjs."""
+    contract = read("scripts/lib/ccsd-contract.mjs")
+    required = re.findall(
+        r'export const CCSD_REQUIRED_FIELDS = \[\s*([\s\S]*?)\s*\];',
+        contract,
+    )[0]
+    optional = re.findall(
+        r'export const CCSD_OPTIONAL_FIELDS = \[\s*([\s\S]*?)\s*\];',
+        contract,
+    )[0]
+    pr_fields = re.findall(
+        r'export const CCSD_PR_SUMMARY_FIELDS = \[\s*([\s\S]*?)\s*\];',
+        contract,
+    )[0]
+
+    def names(block: str) -> list[str]:
+        return re.findall(r'"([^"]+)"', block)
+
+    return names(required), names(optional), names(pr_fields)
+
+
+def test_task_template_contains_canonical_ccsd_fields():
+    required, optional, _ = _parse_ccsd_exports()
+    text = read(".github/ISSUE_TEMPLATE/task.yml")
+
+    for field in required:
+        assert f"label: {field}" in text, f"task.yml missing required field {field}"
+
+    for field in optional:
+        assert f"label: {field}" in text, f"task.yml missing optional field {field}"
+
+    assert "labels:" not in text
+
+
+def test_task_template_placeholders_are_detected_by_validator():
+    contract = read("scripts/lib/ccsd-contract.mjs")
+    template = read(".github/ISSUE_TEMPLATE/task.yml")
+    snippets = re.findall(r'"([^"]+)"', contract.split("CCSD_PLACEHOLDER_SNIPPETS", 1)[1].split("];", 1)[0])
+    for snippet in snippets:
+        assert snippet in template or snippet in contract
+
+
+def test_agents_and_quality_loop_reference_canonical_ccsd_fields():
+    required, _, _ = _parse_ccsd_exports()
+    paths = [
+        ".github/agents/triager.agent.md",
+        ".github/agents/implementer.agent.md",
+        ".github/agents/reviewer.agent.md",
+        ".github/skills/quality-loop/SKILL.md",
+        "AGENTS.md",
+        ".github/copilot-instructions.md",
+    ]
+    for path in paths:
+        text = read(path)
+        for field in required:
+            assert field in text, f"{path} missing canonical field {field}"
+
+
+def test_pr_template_contains_ccsd_summary_fields():
+    _, _, pr_fields = _parse_ccsd_exports()
+    text = read(".github/pull_request_template.md")
+    for field in pr_fields:
+        assert f"## {field}" in text, f"PR template missing section {field}"
+
+
+def test_coding_agent_l1_requires_ccsd_for_l1_docs_test_fix():
+    text = read("docs/coding-agent-l1.md")
+    assert "CC-SD" in text
+    assert "`task:docs`" in text
+    assert "`task:test-fix`" in text
+    assert "`autonomy:L1`" in text
+    assert "issue-spec-check" in text
+
+
+def test_arch_documents_ccsd_contract():
+    text = read("docs/arch.md")
+    assert "CC-SD" in text
+    assert "ccsd-contract.mjs" in text
+    assert "issue-spec-check" in text
+
+
+def test_adoption_describes_ccsd_as_l1_only_v1():
+    text = read("docs/adoption.md")
+    assert "CC-SD" in text
+    assert "v1" in text
+    assert "`task:docs`" in text
+    assert "`task:test-fix`" in text
+    assert "feature-small" in text
+
+
+def test_validation_script_field_list_matches_template():
+    required, optional, _ = _parse_ccsd_exports()
+    template = read(".github/ISSUE_TEMPLATE/task.yml")
+    for field in required + optional:
+        assert f"label: {field}" in template
+    assert "CCSD_REQUIRED_FIELDS" in read("scripts/lib/ccsd-contract.mjs")
+    assert "check-issue-spec.mjs" in read(".github/workflows/harness-ci.yml")

@@ -10,6 +10,7 @@
     "check": "npm run validate && npm run test-hooks && npm run check-e2e && npm run run-e2e",
     "check-e2e": "node scripts/check-e2e-manifest.mjs",
     "test-hooks": "node scripts/test-hooks-scenarios.mjs",
+    "test-issue-spec": "node scripts/test-issue-spec-scenarios.mjs",
     "check-open-prs": "node scripts/check-open-pr-limit.mjs",
     "drift-report": "node scripts/harness-drift-report.mjs",
     "run-e2e": "node scripts/run-e2e-bench.mjs",
