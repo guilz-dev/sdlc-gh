@@ -100,8 +100,27 @@ for stack in $STACKS; do
   cp "$ROOT/sample/$sample_dir/$check_file" "$target/$check_file" 2>/dev/null \
     || touch "$target/$check_file"
 
+  if [[ "$stack" == "ts" ]]; then
+    printf '%s\n' '{"name":"existing-product","scripts":{"start":"node app.js"},"dependencies":{"lodash":"1.0.0"}}' > "$target/package.json"
+  fi
+
   "$ROOT/scripts/bootstrap-harness.sh" --repo "$target" --stack "$stack" --mode existing --codeowners-team @acme/platform --yes
   assert_bootstrapped_repo "$stack" "$target"
+
+  if [[ "$stack" == "ts" ]]; then
+    if ! grep -q '"name": "existing-product"' "$target/package.json"; then
+      echo "bootstrap overwrote existing package.json name for stack=$stack" >&2
+      exit 1
+    fi
+    if ! grep -q '"start": "node app.js"' "$target/package.json"; then
+      echo "bootstrap overwrote existing package.json scripts for stack=$stack" >&2
+      exit 1
+    fi
+    if ! grep -q '"check-l1-readiness"' "$target/package.json"; then
+      echo "bootstrap did not merge harness scripts into package.json for stack=$stack" >&2
+      exit 1
+    fi
+  fi
 
   if [[ -d "$target/sample" ]]; then
     echo "existing mode should not copy sample/ tree for stack=$stack" >&2

@@ -1,0 +1,50 @@
+name: Task issue label sync
+
+on:
+  issues:
+    types: [opened, edited, reopened]
+
+permissions:
+  issues: write
+
+jobs:
+  sync-labels:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Sync labels from Task Issue form
+        uses: actions/github-script@v7
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_LABELS: ${{ join(github.event.issue.labels.*.name, '||') }}
+        with:
+          script: |
+            const { parseTaskIssueSelections, planIssueLabels } = await import(
+              `${process.env.GITHUB_WORKSPACE}/scripts/lib/issue-form-label-sync.mjs`
+            );
+            const existingLabels = (process.env.ISSUE_LABELS || "")
+              .split("||")
+              .map((label) => label.trim())
+              .filter(Boolean);
+            const parsed = parseTaskIssueSelections(process.env.ISSUE_BODY || "");
+            if (!parsed.isTaskIssue) {
+              core.info("Issue does not match the Task Issue form; skipping.");
+              return;
+            }
+            const plan = planIssueLabels(existingLabels, parsed);
+            if (!plan.changed) {
+              core.info(plan.reason);
+              return;
+            }
+            await github.rest.issues.setLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: plan.labels,
+            });
+            core.notice(`Applied labels: ${plan.labels.join(", ")}`);

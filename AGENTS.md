@@ -17,12 +17,13 @@ For `task:docs` and `task:test-fix` delegated at `autonomy:L1`, the Issue embeds
 | `Rollback hints` | yes |
 | `Additional context` | optional |
 
-CI enforces completeness via `issue-spec-check`. Enforcement uses Issue **labels** applied by triager, not the form dropdown alone. v1 does not cover `feature-small`, `infra`, or `security-sensitive`.
+CI enforces completeness via `issue-spec-check`. Task Issues created from `.github/ISSUE_TEMPLATE/task.yml` sync `task:*` / `autonomy:*` labels automatically via `.github/workflows/task-issue-label-sync.yml`. v1 does not cover `feature-small`, `infra`, or `security-sensitive`.
 
 Before starting spec-driven L1 delegation, run readiness checks:
 
 - `npm run check-l1-readiness`
 - strict mode: `npm run check-l1-readiness -- --strict`
+- no local Node/gh: run `Actions -> L1 readiness check -> Run workflow` (`.github/workflows/l1-readiness-check.yml`)
 
 ## Task classification
 

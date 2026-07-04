@@ -6,7 +6,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { buildEvalRulesetPayload, buildRulesetPayload, loadLabels } from "./lib/github-config.mjs";
-import { getStack } from "./lib/stacks.mjs";
+import { resolveStackId } from "./lib/doctor-local.mjs";
 
 function fail(message) {
   console.error(message);
@@ -201,11 +201,19 @@ function applyEvalRuleset(repoRoot, githubRepo, dryRun) {
 const args = parseArgs(process.argv.slice(2));
 const repoRoot = resolveRepoRoot();
 const stackFile = join(repoRoot, ".harness-stack");
-if (!existsSync(stackFile)) {
-  fail(`Missing ${stackFile}. Run bootstrap first.`);
+const stackFromFile = existsSync(stackFile) ? readFileSync(stackFile, "utf8").trim() : "";
+const stackId = resolveStackId(repoRoot);
+if (stackFromFile && !stackId) {
+  fail(`Invalid ${stackFile} value: ${stackFromFile}. Run setup-wizard/bootstrap to set a supported stack id.`);
 }
-const stackId = readFileSync(stackFile, "utf8").trim();
-getStack(stackId);
+if (!stackId) {
+  fail(
+    `Unable to resolve stack id. Set ${stackFile} or keep exactly one .github/workflows/product-ci-*.yml in this repository.`,
+  );
+}
+if (!stackFromFile) {
+  console.log(`Info: ${stackFile} is missing; inferred stack=${stackId} from product-ci workflow.`);
+}
 
 if (!hasGh()) {
   fail("gh is required. Install it, run `gh auth login`, then retry. Manual fallback: import .github/ruleset.example.json and apply labels from .github/labels.yml.");

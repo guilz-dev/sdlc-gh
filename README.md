@@ -114,7 +114,7 @@ npm run check-l1-readiness -- --strict
 
 3. Create an Issue from `.github/ISSUE_TEMPLATE/task.yml`
 4. Fill `Goal`, `Non-goals`, `Constraints`, `Acceptance criteria`, `Rollback hints`
-5. Add labels (`task:docs` or `task:test-fix`) + `autonomy:L1`
+5. Confirm the synced labels (`task:docs` or `task:test-fix`) + `autonomy:L1`
 6. Assign `triager`, then `implementer`
 
 Readiness checker notes:
@@ -123,6 +123,11 @@ Readiness checker notes:
 - validates GitHub labels/rulesets and latest `copilot-setup-steps` run when `gh` is authenticated
 - reports items that still require manual confirmation (Copilot coding agent entitlement)
 - supports machine-readable output via `npm run check-l1-readiness -- --json`
+- without local Node/gh, run **Actions → L1 readiness check → Run workflow** via [.github/workflows/l1-readiness-check.yml](.github/workflows/l1-readiness-check.yml) (writes a job summary)
+
+Bootstrap merges harness npm scripts into an existing root `package.json` instead of overwriting application metadata. Non-Node stacks get a minimal harness-only `package.json` when none exists.
+
+Fresh clones without gitignored `.harness-stack` infer stack from the committed `product-ci-*.yml` workflow.
 
 Detailed trial guide: [docs/coding-agent-l1.md](docs/coding-agent-l1.md).
 
@@ -291,6 +296,14 @@ flowchart TB
 ```
 
 ## Documentation
+
+If you are adopting the harness in a product repo, start with [docs/adoption.md](docs/adoption.md) and then keep [docs/revert-playbook.md](docs/revert-playbook.md) nearby.
+
+If you are operating an installed harness day to day, read [docs/operations.md](docs/operations.md) first, then [docs/failure-taxonomy.md](docs/failure-taxonomy.md) and [docs/telemetry-artifacts.md](docs/telemetry-artifacts.md).
+
+If you are writing or triaging Task Issues for L1 delegation, start with [docs/coding-agent-l1.md](docs/coding-agent-l1.md) and use the Actions fallback in [.github/workflows/l1-readiness-check.yml](.github/workflows/l1-readiness-check.yml) when local `gh`/Node is unavailable.
+
+If you are contributing to the harness itself, read [CONTRIBUTING.md](CONTRIBUTING.md), then [docs/arch.md](docs/arch.md), and use [docs/shared-config.md](docs/shared-config.md) for distribution/update strategy.
 
 | Document | Contents |
 |----------|----------|

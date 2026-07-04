@@ -1,0 +1,46 @@
+name: L1 readiness check
+
+on:
+  workflow_dispatch:
+    inputs:
+      strict:
+        description: Enable strict readiness gating (same semantics as check-l1-readiness --strict)
+        type: boolean
+        default: false
+      template:
+        description: Template repository mode (multiple product-ci workflows)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  actions: read
+  administration: read
+
+jobs:
+  l1-readiness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run L1 readiness check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          args=(--github-repo "${{ github.repository }}" --json --summary)
+          if [[ "${{ inputs.strict }}" == "true" ]]; then
+            args+=(--strict)
+          fi
+          if [[ "${{ inputs.template }}" == "true" ]]; then
+            args+=(--template)
+          fi
+          node scripts/check-l1-readiness.mjs "${args[@]}" | tee l1-readiness.json
+          node --input-type=module -e "
+            import { readFileSync } from 'node:fs';
+            const report = JSON.parse(readFileSync('l1-readiness.json', 'utf8'));
+            process.exit(report.exitCode ?? (report.hasFail ? 1 : 0));
+          "

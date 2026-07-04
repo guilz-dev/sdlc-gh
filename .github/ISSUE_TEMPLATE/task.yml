@@ -55,7 +55,7 @@ body:
     id: task_class
     attributes:
       label: Task class
-      description: Triager or assignee must map this choice to the matching task:* label.
+      description: The matching `task:*` label is synced automatically from this choice.
       options:
         - docs
         - test-fix
@@ -71,7 +71,7 @@ body:
     id: autonomy
     attributes:
       label: Max autonomy level
-      description: Assignee must map this choice to the matching autonomy:* label.
+      description: The matching `autonomy:*` label is synced automatically from this choice.
       options:
         - L0
         - L1

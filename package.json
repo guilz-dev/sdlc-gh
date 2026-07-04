@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "validate": "node scripts/validate-harness.mjs",
-    "check": "npm run validate && npm run test-hooks && npm run test-issue-spec && npm run test-diff-size && npm run test-e2e-manifest && npm run test-setup-github && npm run test-doctor && npm run test-telemetry-artifact && npm run test-harness-review && npm run test-harness-review-routing && npm run test-gh-aw-dogfood && npm run test-bootstrap-guidance && npm run test-l1-readiness && npm run test-setup-wizard && npm run check-e2e && npm run run-e2e",
+    "check": "npm run validate && npm run test-hooks && npm run test-issue-spec && npm run test-diff-size && npm run test-e2e-manifest && npm run test-setup-github && npm run test-doctor && npm run test-telemetry-artifact && npm run test-harness-review && npm run test-harness-review-routing && npm run test-gh-aw-dogfood && npm run test-bootstrap-guidance && npm run test-merge-harness-package && npm run test-l1-readiness && npm run test-setup-wizard && npm run check-e2e && npm run run-e2e",
     "check-l1-readiness": "node scripts/check-l1-readiness.mjs",
     "check-e2e": "node scripts/check-e2e-manifest.mjs",
     "test-diff-size": "node scripts/test-diff-size-scenarios.mjs",
@@ -17,6 +17,7 @@
     "test-setup-github": "node scripts/test-setup-github-scenarios.mjs",
     "test-doctor": "node scripts/test-doctor-scenarios.mjs",
     "test-bootstrap-guidance": "node scripts/test-bootstrap-guidance-scenarios.mjs",
+    "test-merge-harness-package": "node scripts/test-merge-harness-package-scenarios.mjs",
     "test-l1-readiness": "node scripts/test-l1-readiness-scenarios.mjs",
     "test-setup-wizard": "node scripts/test-setup-wizard-scenarios.mjs",
     "test-telemetry-artifact": "node scripts/test-telemetry-artifact-scenarios.mjs",

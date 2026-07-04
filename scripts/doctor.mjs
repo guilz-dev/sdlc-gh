@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync, spawnSync } from "node:child_process";
 import { loadLabels } from "./lib/github-config.mjs";
-import { localChecks, result } from "./lib/doctor-local.mjs";
+import { localChecks, resolveStackId, result } from "./lib/doctor-local.mjs";
 
 const argv = process.argv.slice(2);
 if (argv.includes("--help") || argv.includes("-h")) {
@@ -74,6 +74,18 @@ function githubChecks(repoRoot, stackId) {
   }
   if (!ghAuthed()) {
     entries.push(result("SKIP", "GitHub auth", "gh is not authenticated", "Run `gh auth login` to verify GitHub state."));
+    return entries;
+  }
+
+  if (!stackId) {
+    entries.push(
+      result(
+        "SKIP",
+        "required status checks",
+        "stack could not be resolved",
+        "Ensure exactly one product-ci-*.yml workflow exists or run setup-wizard.",
+      ),
+    );
     return entries;
   }
 
@@ -156,7 +168,8 @@ function githubChecks(repoRoot, stackId) {
 
 const repoRoot = resolveRepoRoot();
 const local = localChecks(repoRoot, { templateMode });
-const entries = [...local.entries, ...githubChecks(repoRoot, local.stackId || "ts")];
+const stackId = local.stackId || resolveStackId(repoRoot);
+const entries = [...local.entries, ...githubChecks(repoRoot, stackId)];
 for (const entry of entries) printResult(entry);
 
 const hasFail = entries.some((entry) => entry.status === "FAIL");

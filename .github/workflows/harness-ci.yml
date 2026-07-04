@@ -44,6 +44,9 @@ jobs:
       - name: Issue-spec scenario tests
         run: node scripts/test-issue-spec-scenarios.mjs
 
+      - name: Issue form label sync scenario tests
+        run: node scripts/test-issue-form-label-sync-scenarios.mjs
+
       - name: Diff-size scenario tests
         run: node scripts/test-diff-size-scenarios.mjs
 

@@ -7,20 +7,82 @@ export function result(status, label, detail, fix = "") {
   return { status, label, detail, fix };
 }
 
+/** @param {string} repoRoot */
+export function listProductCiWorkflows(repoRoot) {
+  const workflowsDir = join(repoRoot, ".github/workflows");
+  if (!existsSync(workflowsDir)) return [];
+  return readdirSync(workflowsDir).filter((name) => /^product-ci-([^.]+)\.yml$/.test(name));
+}
+
+/** @param {string} repoRoot */
+export function inferStackFromProductCi(repoRoot) {
+  const workflows = listProductCiWorkflows(repoRoot);
+  if (workflows.length !== 1) return "";
+  const match = workflows[0].match(/^product-ci-([^.]+)\.yml$/);
+  return match?.[1] ?? "";
+}
+
+/** @param {string} repoRoot */
+export function resolveStackId(repoRoot) {
+  const stackFile = join(repoRoot, ".harness-stack");
+  if (existsSync(stackFile)) {
+    const stackId = readFileSync(stackFile, "utf8").trim();
+    try {
+      getStack(stackId);
+      return stackId;
+    } catch {
+      return "";
+    }
+  }
+
+  const inferred = inferStackFromProductCi(repoRoot);
+  if (!inferred) return "";
+  try {
+    getStack(inferred);
+    return inferred;
+  } catch {
+    return "";
+  }
+}
+
 export function localChecks(repoRoot, { nodeVersion = process.versions.node, templateMode = false } = {}) {
   const entries = [];
-  const stackFile = join(repoRoot, ".harness-stack");
   let stackId = "";
+  const stackFile = join(repoRoot, ".harness-stack");
 
   if (!existsSync(stackFile)) {
-    entries.push(
-      result(
-        "FAIL",
-        ".harness-stack",
-        "missing",
-        "Run `./scripts/setup-wizard.mjs` or `./scripts/bootstrap-harness.sh`.",
-      ),
-    );
+    const inferred = inferStackFromProductCi(repoRoot);
+    if (inferred) {
+      try {
+        getStack(inferred);
+        stackId = inferred;
+        entries.push(
+          result(
+            "PASS",
+            ".harness-stack",
+            `inferred ${inferred} from product-ci-${inferred}.yml (local file is gitignored; optional: run setup-wizard to write it)`,
+          ),
+        );
+      } catch {
+        entries.push(
+          result(
+            "FAIL",
+            ".harness-stack",
+            `missing and product-ci-${inferred}.yml maps to unknown stack`,
+            "Run `./scripts/setup-wizard.mjs` or `./scripts/bootstrap-harness.sh`.",
+          ),
+        );
+      }
+    } else {
+      entries.push(
+        result(
+          "FAIL",
+          ".harness-stack",
+          "missing",
+          "Run `./scripts/setup-wizard.mjs` or `./scripts/bootstrap-harness.sh`.",
+        ),
+      );
+    }
   } else {
     stackId = readFileSync(stackFile, "utf8").trim();
     try {
@@ -107,6 +169,10 @@ export function localChecks(repoRoot, { nodeVersion = process.versions.node, tem
         "Install Node.js 22+ for local parity with CI.",
       ),
     );
+  }
+
+  if (!stackId) {
+    stackId = resolveStackId(repoRoot);
   }
 
   return { entries, stackId };

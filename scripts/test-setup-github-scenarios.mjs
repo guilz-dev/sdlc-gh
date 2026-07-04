@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildEvalRulesetPayload, buildRulesetPayload, parseLabels } from "./lib/github-config.mjs";
+import { resolveStackId } from "./lib/doctor-local.mjs";
 
 const labels = parseLabels(`
 - name: task:docs
@@ -90,5 +91,13 @@ assert.equal(evalPayload.name, "harness-pr-eval-required");
 assert.deepEqual(evalContexts, ["harness-static", "select", "trajectory-conventions"]);
 assert.equal("_comment" in evalPayload, false);
 
+const stackRepo = mkdtempSync(join(tmpdir(), "sdlc-gh-stack-resolve-"));
+mkdirSync(join(stackRepo, ".github/workflows"), { recursive: true });
+writeFileSync(join(stackRepo, ".github/workflows/product-ci-go.yml"), "name: product-ci-go\n");
+assert.equal(resolveStackId(stackRepo), "go");
+writeFileSync(join(stackRepo, ".harness-stack"), "python\n");
+assert.equal(resolveStackId(stackRepo), "python");
+
 rmSync(tempDir, { recursive: true, force: true });
+rmSync(stackRepo, { recursive: true, force: true });
 console.log("GitHub setup scenario tests passed");

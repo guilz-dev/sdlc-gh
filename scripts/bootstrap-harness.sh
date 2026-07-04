@@ -341,7 +341,7 @@ cp "$TEMPLATE_ROOT/.github/instructions/profiles/$PROFILE" "$REPO/.github/instru
 
 # Workflows — core + selected stack product CI + phase 2–4
 mkdir -p "$REPO/.github/workflows"
-for wf in harness-ci.yml copilot-setup-steps.yml pr-context-comment.yml eval-ci.yml eval-drift.yml \
+for wf in harness-ci.yml copilot-setup-steps.yml l1-readiness-check.yml pr-context-comment.yml eval-ci.yml eval-drift.yml \
   agent-retry-orchestrator.yml harness-sync.yml labels-sync.yml nightly-harness-review.yml gh-aw-dogfood-ci.yml; do
   cp "$TEMPLATE_ROOT/.github/workflows/$wf" "$REPO/.github/workflows/"
 done
@@ -357,10 +357,10 @@ mkdir -p "$REPO/scripts/lib"
 for s in validate-harness.mjs check-diff-size.mjs check-issue-spec.mjs select-eval-jobs.mjs \
   check-e2e-manifest.mjs validate-telemetry.mjs emit-telemetry-artifact.mjs fetch-telemetry-artifacts.mjs \
   aggregate-harness-review.mjs route-harness-review.mjs check-l1-readiness.mjs check-gh-aw-dogfood-scope.mjs validate-gh-aw-compile.mjs \
-  emit-gh-aw-dogfood-report.mjs check-open-pr-limit.mjs test-hooks-scenarios.mjs test-issue-spec-scenarios.mjs \
+  emit-gh-aw-dogfood-report.mjs check-open-pr-limit.mjs merge-harness-package.mjs test-hooks-scenarios.mjs test-issue-spec-scenarios.mjs \
   test-diff-size-scenarios.mjs test-e2e-manifest-scenarios.mjs test-setup-github-scenarios.mjs test-doctor-scenarios.mjs \
   test-telemetry-artifact-scenarios.mjs test-harness-review-scenarios.mjs test-harness-review-routing-scenarios.mjs test-gh-aw-dogfood-scenarios.mjs \
-  test-bootstrap-guidance-scenarios.mjs test-l1-readiness-scenarios.mjs test-setup-wizard-scenarios.mjs \
+  test-bootstrap-guidance-scenarios.mjs test-merge-harness-package-scenarios.mjs test-l1-readiness-scenarios.mjs test-setup-wizard-scenarios.mjs \
   harness-drift-report.mjs check-eval-score-drift.mjs run-e2e-bench.mjs doctor.mjs setup-github.mjs setup-wizard.mjs; do
   cp "$TEMPLATE_ROOT/scripts/$s" "$REPO/scripts/" 2>/dev/null || true
 done
@@ -368,11 +368,11 @@ for s in bootstrap-harness.sh setup-github.sh verify-bootstrap-stacks.sh; do
   cp "$TEMPLATE_ROOT/scripts/$s" "$REPO/scripts/" 2>/dev/null || true
 done
 for s in stacks.mjs harness-ci-fragments.mjs ccsd-contract.mjs github-config.mjs diff-size.mjs e2e-manifest.mjs \
-  doctor-local.mjs bootstrap-copy.mjs telemetry-artifact.mjs harness-review.mjs harness-review-routing.mjs gh-aw-dogfood.mjs setup-wizard.mjs; do
+  doctor-local.mjs bootstrap-copy.mjs l1-readiness.mjs merge-harness-package.mjs telemetry-artifact.mjs harness-review.mjs harness-review-routing.mjs gh-aw-dogfood.mjs setup-wizard.mjs; do
   cp "$TEMPLATE_ROOT/scripts/lib/$s" "$REPO/scripts/lib/" 2>/dev/null || true
 done
 cp "$TEMPLATE_ROOT/scripts/trim-harness-ci.mjs" "$REPO/scripts/" 2>/dev/null || true
-cp "$TEMPLATE_ROOT/package.json" "$REPO/package.json" 2>/dev/null || true
+node "$TEMPLATE_ROOT/scripts/merge-harness-package.mjs" "$TEMPLATE_ROOT/package.json" "$REPO/package.json"
 chmod +x "$REPO/scripts/"*.mjs "$REPO/scripts/"*.sh 2>/dev/null || true
 
 # Sample for new projects

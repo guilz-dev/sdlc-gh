@@ -21,10 +21,18 @@ assert.equal(healthy.stackId, "ts");
 
 const missingDir = mkdtempSync(join(tmpdir(), "sdlc-gh-doctor-missing-"));
 mkdirSync(join(missingDir, ".github/workflows"), { recursive: true });
-writeFileSync(join(missingDir, ".github/workflows/product-ci-ts.yml"), "name: product-ci-ts\n");
 writeFileSync(join(missingDir, ".github/CODEOWNERS"), "* @my-org/harness-engineers\n");
 const noStack = localChecks(missingDir, { nodeVersion: "22.0.0" });
 assert.ok(noStack.entries.some((e) => e.label === ".harness-stack" && e.status === "FAIL"));
+assert.ok(noStack.entries.some((e) => e.label === "product-ci workflow" && e.status === "FAIL"));
+
+const inferredDir = mkdtempSync(join(tmpdir(), "sdlc-gh-doctor-inferred-"));
+mkdirSync(join(inferredDir, ".github/workflows"), { recursive: true });
+writeFileSync(join(inferredDir, ".github/workflows/product-ci-python.yml"), "name: product-ci-python\n");
+writeFileSync(join(inferredDir, ".github/CODEOWNERS"), "* @my-org/harness-engineers\n");
+const inferred = localChecks(inferredDir, { nodeVersion: "22.0.0" });
+assert.equal(inferred.stackId, "python");
+assert.ok(inferred.entries.some((e) => e.label === ".harness-stack" && e.status === "PASS" && e.detail.includes("inferred python")));
 
 const placeholderDir = mkdtempSync(join(tmpdir(), "sdlc-gh-doctor-placeholder-"));
 mkdirSync(join(placeholderDir, ".github/workflows"), { recursive: true });
