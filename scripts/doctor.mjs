@@ -5,7 +5,18 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { loadLabels } from "./lib/github-config.mjs";
 import { localChecks, result } from "./lib/doctor-local.mjs";
 
-const strict = process.argv.includes("--strict");
+const argv = process.argv.slice(2);
+if (argv.includes("--help") || argv.includes("-h")) {
+  console.log(`Usage: doctor.mjs [--strict] [--template]
+
+  --strict    Fail on SKIP checks (default: fail only on FAIL)
+  --template  Allow multiple product-ci workflows (template repository mode)
+`);
+  process.exit(0);
+}
+
+const strict = argv.includes("--strict");
+const templateMode = argv.includes("--template");
 
 function resolveRepoRoot() {
   try {
@@ -144,7 +155,7 @@ function githubChecks(repoRoot, stackId) {
 }
 
 const repoRoot = resolveRepoRoot();
-const local = localChecks(repoRoot);
+const local = localChecks(repoRoot, { templateMode });
 const entries = [...local.entries, ...githubChecks(repoRoot, local.stackId || "ts")];
 for (const entry of entries) printResult(entry);
 

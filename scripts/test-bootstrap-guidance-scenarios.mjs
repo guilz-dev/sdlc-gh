@@ -43,7 +43,7 @@ const noGhResult = runBootstrap({ repoPath: noGhRepo });
 assert.equal(noGhResult.status, 0, noGhResult.stderr);
 assert.match(
   noGhResult.stdout,
-  /Next: \.\/scripts\/setup-github\.sh --github-repo OWNER\/REPO --yes/,
+  /Next: \.\/scripts\/setup-wizard\.mjs --yes --stack ts --codeowners @acme\/platform --github-repo OWNER\/REPO/,
 );
 
 const fakeBinDir = mkdtempSync(join(tmpdir(), "sdlc-gh-guidance-bin-"));
@@ -77,14 +77,14 @@ const ghResult = runBootstrap({
 assert.equal(ghResult.status, 0, ghResult.stderr);
 assert.match(
   ghResult.stdout,
-  /Next: \.\/scripts\/setup-github\.sh --yes/,
+  /Next: \.\/scripts\/setup-wizard\.mjs --yes --stack ts --codeowners @acme\/platform/,
 );
 assert.doesNotMatch(
   ghResult.stdout,
-  /Next: \.\/scripts\/setup-github\.sh --github-repo OWNER\/REPO --yes/,
+  /Next: \.\/scripts\/setup-wizard\.mjs --yes --stack ts --codeowners @acme\/platform --github-repo OWNER\/REPO/,
 );
 
 const copiedTest = readFileSync(join(ghRepo, "scripts/test-bootstrap-guidance-scenarios.mjs"), "utf8");
-assert.ok(copiedTest.includes("setup-github.sh --github-repo OWNER/REPO --yes"));
+assert.ok(copiedTest.includes("setup-wizard.mjs"));
 
 console.log("Bootstrap guidance scenario tests passed");

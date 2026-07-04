@@ -6,13 +6,20 @@ export function result(status, label, detail, fix = "") {
   return { status, label, detail, fix };
 }
 
-export function localChecks(repoRoot, { nodeVersion = process.versions.node } = {}) {
+export function localChecks(repoRoot, { nodeVersion = process.versions.node, templateMode = false } = {}) {
   const entries = [];
   const stackFile = join(repoRoot, ".harness-stack");
   let stackId = "";
 
   if (!existsSync(stackFile)) {
-    entries.push(result("FAIL", ".harness-stack", "missing", "Run `./scripts/bootstrap-harness.sh` again."));
+    entries.push(
+      result(
+        "FAIL",
+        ".harness-stack",
+        "missing",
+        "Run `./scripts/setup-wizard.mjs` or `./scripts/bootstrap-harness.sh`.",
+      ),
+    );
   } else {
     stackId = readFileSync(stackFile, "utf8").trim();
     try {
@@ -36,13 +43,21 @@ export function localChecks(repoRoot, { nodeVersion = process.versions.node } = 
     : [];
   if (productWorkflows.length === 1) {
     entries.push(result("PASS", "product-ci workflow", `found ${productWorkflows[0]}`));
+  } else if (templateMode && productWorkflows.length > 1) {
+    entries.push(
+      result(
+        "PASS",
+        "product-ci workflow",
+        `template repo: ${productWorkflows.length} workflows (${productWorkflows.join(", ")})`,
+      ),
+    );
   } else {
     entries.push(
       result(
         "FAIL",
         "product-ci workflow",
         `expected exactly 1 product-ci workflow, found ${productWorkflows.length}`,
-        "Re-run `./scripts/bootstrap-harness.sh` and confirm the selected stack.",
+        "Re-run `./scripts/bootstrap-harness.sh` or `./scripts/setup-wizard.mjs --template`.",
       ),
     );
   }
@@ -56,7 +71,7 @@ export function localChecks(repoRoot, { nodeVersion = process.versions.node } = 
         "FAIL",
         "CODEOWNERS",
         "placeholder team still present",
-        "Re-run `./scripts/bootstrap-harness.sh --codeowners-team @org/team`.",
+        "Run `./scripts/setup-wizard.mjs` or `./scripts/bootstrap-harness.sh --codeowners-team @org/team`.",
       ),
     );
   } else {

@@ -9,6 +9,11 @@ on:
         description: Hours of telemetry to aggregate
         required: false
         default: "24"
+      apply_routing:
+        description: Apply issue routing instead of dry-run preview
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   actions: read
@@ -47,6 +52,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           HARNESS_REVIEW_OUT_DIR: harness-review
+          HARNESS_ROUTING_DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.apply_routing != true && '1' || '0' }}
         run: node scripts/route-harness-review.mjs
 
       - name: Upload harness review summary

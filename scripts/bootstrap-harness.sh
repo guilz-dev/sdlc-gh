@@ -169,9 +169,9 @@ prompt_codeowners_team() {
     exit 1
   fi
 
-  read -r -p "CODEOWNERS team [@org/team]: " answer
-  if [[ ! "$answer" =~ ^@[^/]+/[^/]+$ ]]; then
-    echo "Expected @org/team format." >&2
+  read -r -p "CODEOWNERS team [@org/team or @username]: " answer
+  if [[ ! "$answer" =~ ^@[^/]+/[^/]+$ ]] && [[ ! "$answer" =~ ^@[A-Za-z0-9_.-]+$ ]]; then
+    echo "Expected @org/team or @username format." >&2
     exit 1
   fi
   CODEOWNERS_TEAM="$answer"
@@ -222,15 +222,16 @@ print_next_step() {
   local setup_cmd
   if [[ -d "$REPO/.git" ]] || git -C "$REPO" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     if (cd "$REPO" && resolve_github_repo_name >/dev/null); then
-      setup_cmd="./scripts/setup-github.sh --yes"
+      setup_cmd="./scripts/setup-wizard.mjs --yes --stack $STACK --codeowners $CODEOWNERS_TEAM"
     else
-      setup_cmd="./scripts/setup-github.sh --github-repo OWNER/REPO --yes"
+      setup_cmd="./scripts/setup-wizard.mjs --yes --stack $STACK --codeowners $CODEOWNERS_TEAM --github-repo OWNER/REPO"
     fi
   else
-    setup_cmd="./scripts/setup-github.sh --github-repo OWNER/REPO --yes"
+    setup_cmd="./scripts/setup-wizard.mjs --yes --stack $STACK --codeowners $CODEOWNERS_TEAM --github-repo OWNER/REPO"
   fi
 
   echo "Next: $setup_cmd"
+  echo "      Or: ./scripts/setup-github.sh --yes (after reviewing CODEOWNERS and .harness-stack)"
   echo "      Replace OWNER/REPO with your GitHub repository if auto-detection is unavailable."
 }
 
@@ -359,15 +360,15 @@ for s in validate-harness.mjs check-diff-size.mjs check-issue-spec.mjs select-ev
   emit-gh-aw-dogfood-report.mjs check-open-pr-limit.mjs test-hooks-scenarios.mjs test-issue-spec-scenarios.mjs \
   test-diff-size-scenarios.mjs test-e2e-manifest-scenarios.mjs test-setup-github-scenarios.mjs test-doctor-scenarios.mjs \
   test-telemetry-artifact-scenarios.mjs test-harness-review-scenarios.mjs test-harness-review-routing-scenarios.mjs test-gh-aw-dogfood-scenarios.mjs \
-  test-bootstrap-guidance-scenarios.mjs \
-  harness-drift-report.mjs check-eval-score-drift.mjs run-e2e-bench.mjs doctor.mjs setup-github.mjs; do
+  test-bootstrap-guidance-scenarios.mjs test-setup-wizard-scenarios.mjs \
+  harness-drift-report.mjs check-eval-score-drift.mjs run-e2e-bench.mjs doctor.mjs setup-github.mjs setup-wizard.mjs; do
   cp "$TEMPLATE_ROOT/scripts/$s" "$REPO/scripts/" 2>/dev/null || true
 done
 for s in bootstrap-harness.sh setup-github.sh verify-bootstrap-stacks.sh; do
   cp "$TEMPLATE_ROOT/scripts/$s" "$REPO/scripts/" 2>/dev/null || true
 done
 for s in stacks.mjs harness-ci-fragments.mjs ccsd-contract.mjs github-config.mjs diff-size.mjs e2e-manifest.mjs \
-  doctor-local.mjs bootstrap-copy.mjs telemetry-artifact.mjs harness-review.mjs harness-review-routing.mjs gh-aw-dogfood.mjs; do
+  doctor-local.mjs bootstrap-copy.mjs telemetry-artifact.mjs harness-review.mjs harness-review-routing.mjs gh-aw-dogfood.mjs setup-wizard.mjs; do
   cp "$TEMPLATE_ROOT/scripts/lib/$s" "$REPO/scripts/lib/" 2>/dev/null || true
 done
 cp "$TEMPLATE_ROOT/scripts/trim-harness-ci.mjs" "$REPO/scripts/" 2>/dev/null || true

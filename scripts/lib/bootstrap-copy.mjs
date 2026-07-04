@@ -16,6 +16,7 @@ export const BOOTSTRAP_LIB_FILES = [
   "harness-review.mjs",
   "harness-review-routing.mjs",
   "gh-aw-dogfood.mjs",
+  "setup-wizard.mjs",
 ];
 
 export const BOOTSTRAP_SCRIPT_MJS = [
@@ -44,11 +45,13 @@ export const BOOTSTRAP_SCRIPT_MJS = [
   "test-harness-review-routing-scenarios.mjs",
   "test-gh-aw-dogfood-scenarios.mjs",
   "test-bootstrap-guidance-scenarios.mjs",
+  "test-setup-wizard-scenarios.mjs",
   "harness-drift-report.mjs",
   "check-eval-score-drift.mjs",
   "run-e2e-bench.mjs",
   "doctor.mjs",
   "setup-github.mjs",
+  "setup-wizard.mjs",
   "trim-harness-ci.mjs",
 ];
 
@@ -84,6 +87,8 @@ export const SCRIPT_LIB_IMPORTS = {
   "test-e2e-manifest-scenarios.mjs": ["e2e-manifest.mjs"],
   "test-setup-github-scenarios.mjs": ["github-config.mjs"],
   "test-doctor-scenarios.mjs": ["doctor-local.mjs"],
+  "setup-wizard.mjs": ["setup-wizard.mjs", "stacks.mjs"],
+  "test-setup-wizard-scenarios.mjs": ["setup-wizard.mjs", "doctor-local.mjs"],
   "emit-telemetry-artifact.mjs": ["telemetry-artifact.mjs", "ccsd-contract.mjs", "diff-size.mjs"],
   "validate-telemetry.mjs": ["telemetry-artifact.mjs"],
   "test-telemetry-artifact-scenarios.mjs": ["telemetry-artifact.mjs", "harness-ci-fragments.mjs"],

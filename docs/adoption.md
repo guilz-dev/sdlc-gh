@@ -33,11 +33,22 @@ git add -A && git commit -m "Add agent harness"
 
 ## GitHub setup order
 
-Apply in this order (see `scripts/setup-github.sh`):
+Apply in this order (or run `./scripts/setup-wizard.mjs` to perform steps 1–2 and verify with doctor):
 
 1. **Labels sync** — `task:*` and `autonomy:*` from `.github/labels.yml`
 2. **Main protection** — `main-protection` ruleset with harness + product CI checks
 3. **Optional eval ruleset** — `--with-eval-ruleset` adds `harness-pr-eval-required` (eval CI checks only; does not enable GitHub Models). This ruleset targets `main` and requires `select` + `trajectory-conventions` on **all** PRs to that branch — enable only when your org accepts that cost, or narrow the ruleset conditions in GitHub Settings after creation.
+
+### Setup wizard
+
+`./scripts/setup-wizard.mjs` orchestrates Phase 0–1 install settings:
+
+- writes `.harness-stack` (primary stack for rulesets)
+- replaces the `CODEOWNERS` placeholder
+- runs `setup-github.sh` (labels + rulesets)
+- runs `doctor --strict` (pass `--template` for multi-stack template repos)
+
+Non-interactive flags: `--yes`, `--stack`, `--codeowners`, `--github-repo`, `--with-eval-ruleset`, `--skip-github`, `--dry-run`, `--force-bootstrap` (destructive; never with `--yes`).
 
 ## Behavior / spec corrections (template updates)
 

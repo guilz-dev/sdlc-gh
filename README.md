@@ -66,9 +66,10 @@ cd /path/to/new-product
 
 The harness is active only after GitHub setup and a clean doctor run:
 
-1. **Bootstrap** — run `./scripts/bootstrap-harness.sh` and confirm the detected stack/mode summary
-2. **Configure GitHub** — run `./scripts/setup-github.sh` to sync labels and create/update the `main-protection` ruleset with your stack's `product-ci-*` check. Optionally add `--with-eval-ruleset` after eval CI is stable.
-3. **Verify** — run `./scripts/doctor.mjs --strict` until every required item passes
+1. **Setup wizard (recommended)** — run `./scripts/setup-wizard.mjs` to configure `.harness-stack`, `CODEOWNERS`, GitHub labels/rulesets, and verify with `doctor --strict`. Use `--template` when dogfooding the multi-stack template repository.
+2. **Bootstrap** — run `./scripts/bootstrap-harness.sh` and confirm the detected stack/mode summary (alternative to the wizard for copy-only installs).
+3. **Configure GitHub** — the wizard runs `setup-github.sh` automatically; or run it manually to sync labels and create/update the `main-protection` ruleset with your stack's `product-ci-*` check. Optionally add `--with-eval-ruleset` after eval CI is stable.
+4. **Verify** — run `./scripts/doctor.mjs --strict` until every required item passes (`--template` for the template repo).
 
 Manual fallback remains available for restricted environments:
 
@@ -77,6 +78,25 @@ Manual fallback remains available for restricted environments:
 - Ensure required checks include `harness-static`, `diff-size`, `issue-spec-check`, and your stack's `product-ci-*`
 
 Detailed steps and rollback guidance: [docs/adoption.md](docs/adoption.md).
+
+## Configuration
+
+| Setting | Location | Purpose |
+|---------|----------|---------|
+| Primary stack | `.harness-stack` (gitignored locally) | Selects `product-ci-{stack}` for rulesets and doctor |
+| Harness review owners | `.github/CODEOWNERS` | Required reviewers for `.github/`, `evals/`, policy docs |
+| Task / autonomy labels | `.github/labels.yml` → GitHub | Issue/PR classification (`task:*`, `autonomy:*`) |
+| Branch protection | `main-protection` ruleset | Required CI checks + code owner review |
+| Optional eval gate | `harness-pr-eval-required` ruleset | Requires eval-ci jobs on PRs to `main` |
+| Change size / retry policy | [docs/operations.md](docs/operations.md) | Canonical thresholds (optional `DIFF_SIZE_L1_HARD_FAIL`) |
+| Optional telemetry | GitHub Secrets `LANGFUSE_*` | Trace links and KPI export ([infra/README.md](infra/README.md)) |
+
+Run `./scripts/setup-wizard.mjs` to apply the required install settings interactively. Non-interactive example:
+
+```bash
+./scripts/setup-wizard.mjs --yes --stack ts --codeowners @your-org/harness-engineers
+./scripts/setup-wizard.mjs --template --yes --stack ts --codeowners @your-org/harness-engineers
+```
 
 ## Repository layout
 

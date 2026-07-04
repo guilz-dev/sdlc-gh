@@ -8,7 +8,7 @@ Standard GitHub Actions outer-loop job that aggregates inner-loop telemetry arti
 |------|-------|
 | File | `.github/workflows/nightly-harness-review.yml` |
 | Schedule | `0 2 * * *` (02:00 UTC daily) |
-| Manual | `workflow_dispatch` with optional `window_hours` (default 24) |
+| Manual | `workflow_dispatch` with optional `window_hours` (default 24); routing is **dry-run by default** unless `apply_routing=true` |
 
 gh-aw stub (`.github/workflows/nightly-harness-review.md` + `.lock.yml`) documents promotion criteria and safe-outputs; **GHA** [nightly-harness-review.yml](../.github/workflows/nightly-harness-review.yml) is the operational baseline.
 
@@ -77,7 +77,9 @@ The JSON summary feeds `scripts/route-harness-review.mjs` (#4), which opens or u
 | **FF不足** | ≥2 task groups **or** repeated `lint` signature (`record_count >= 2`) | harness-revision | `outer-loop:harness-revision`, `autonomy:L0` |
 | **壁不足** | ≥2 task groups **or** CI-pass + review-reject proxy | wall-addition | `outer-loop:wall-addition`, `autonomy:L0` |
 
-Dedupe: HTML comment marker `<!-- harness-routing-key: {repo}:{kind}:{signature} -->` in the issue body. Existing open issues with the same key are **updated**, not duplicated.
+Dedupe: HTML comment marker `<!-- harness-routing-key: {repo}:{kind}:{signature}:{scope} -->` in the issue body. `scope` is derived from task class and wall types where available, so unrelated findings do not collapse into one repo-wide issue. Existing open issues with the same key are **updated**, not duplicated.
+
+**Migration:** keys before scope suffix (`{repo}:{kind}:{signature}`) are not matched automatically. Close or relabel legacy routed issues after upgrading, or accept one duplicate cycle before the new keys stabilize.
 
 Dry-run locally:
 

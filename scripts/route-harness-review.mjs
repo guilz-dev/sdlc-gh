@@ -44,14 +44,10 @@ function ghApi(method, path, payload = null) {
 }
 
 function listOpenRoutedIssues(owner, name) {
-  try {
-    const issues = ghApi("GET", `repos/${owner}/${name}/issues?state=open&per_page=100`);
-    return (Array.isArray(issues) ? issues : []).filter((issue) =>
-      String(issue.body || "").includes("harness-routing-key:"),
-    );
-  } catch {
-    return [];
-  }
+  const issues = ghApi("GET", `repos/${owner}/${name}/issues?state=open&per_page=100`);
+  return (Array.isArray(issues) ? issues : []).filter((issue) =>
+    String(issue.body || "").includes("harness-routing-key:"),
+  );
 }
 
 function createIssue(owner, name, action) {
@@ -114,7 +110,13 @@ function main() {
     return;
   }
 
-  const existingIssues = listOpenRoutedIssues(owner, name);
+  let existingIssues;
+  try {
+    existingIssues = listOpenRoutedIssues(owner, name);
+  } catch (error) {
+    console.error(`::error::Failed to list routed issues: ${error.message}`);
+    process.exit(1);
+  }
   const results = [];
 
   for (const action of plan.actions) {

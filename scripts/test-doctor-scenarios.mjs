@@ -40,4 +40,13 @@ assert.ok(placeholder.entries.some((e) => e.label === "CODEOWNERS" && e.status =
 const oldNode = localChecks(tempDir, { nodeVersion: "20.0.0" });
 assert.ok(oldNode.entries.some((e) => e.label === "Node.js" && e.status === "FAIL"));
 
+const templateMulti = mkdtempSync(join(tmpdir(), "sdlc-gh-doctor-template-"));
+mkdirSync(join(templateMulti, ".github/workflows"), { recursive: true });
+writeFileSync(join(templateMulti, ".harness-stack"), "ts\n");
+writeFileSync(join(templateMulti, ".github/workflows/product-ci-ts.yml"), "name: product-ci-ts\n");
+writeFileSync(join(templateMulti, ".github/workflows/product-ci-go.yml"), "name: product-ci-go\n");
+writeFileSync(join(templateMulti, ".github/CODEOWNERS"), "* @my-org/harness-engineers\n");
+const templateMode = localChecks(templateMulti, { nodeVersion: "22.0.0", templateMode: true });
+assert.ok(templateMode.entries.some((e) => e.label === "product-ci workflow" && e.status === "PASS"));
+
 console.log("Doctor scenario tests passed");

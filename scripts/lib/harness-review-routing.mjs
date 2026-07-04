@@ -21,10 +21,11 @@ export const ISSUE_LABELS = {
  * @param {string} repo
  * @param {string} kind
  * @param {string} signature
+ * @param {string} scope
  * @returns {string}
  */
-export function routingDedupeKey(repo, kind, signature) {
-  return `${repo}:${kind}:${signature}`;
+export function routingDedupeKey(repo, kind, signature, scope) {
+  return `${repo}:${kind}:${signature}:${scope}`;
 }
 
 /**
@@ -69,6 +70,32 @@ export function hasRepeatedWallFindings(summary) {
 }
 
 /**
+ * @param {Record<string, unknown>[]} items
+ * @returns {string}
+ */
+export function inferRoutingScope(items) {
+  const taskClasses = [...new Set(items.map((item) => String(item.task_class || "")).filter(Boolean))].sort();
+  const wallTypes = [...new Set(items.flatMap((item) => item.wall_failure_types ?? []).map(String).filter(Boolean))].sort();
+
+  if (taskClasses.length === 1 && wallTypes.length === 1) {
+    return `task:${taskClasses[0]}|wall:${wallTypes[0]}`;
+  }
+  if (taskClasses.length === 1) {
+    return `task:${taskClasses[0]}`;
+  }
+  if (taskClasses.length > 1) {
+    return `tasks:${taskClasses.join("+")}`;
+  }
+  if (wallTypes.length === 1) {
+    return `wall:${wallTypes[0]}`;
+  }
+  if (wallTypes.length > 1) {
+    return `walls:${wallTypes.join("+")}`;
+  }
+  return "unknown-scope";
+}
+
+/**
  * @param {Record<string, unknown>} summary
  * @param {string} kind
  * @param {Record<string, unknown>[]} items
@@ -77,14 +104,15 @@ export function hasRepeatedWallFindings(summary) {
  */
 export function buildIssueAction(summary, kind, items, signature) {
   const repo = String(summary.repo ?? "unknown/unknown");
-  const dedupeKey = routingDedupeKey(repo, kind, signature);
+  const scope = inferRoutingScope(items);
+  const dedupeKey = routingDedupeKey(repo, kind, signature, scope);
   const windowHours = summary.window_hours ?? 24;
   const marker = routingMarker(dedupeKey);
 
   const title =
     kind === ISSUE_KIND.HARNESS_REVISION
-      ? `[outer-loop] Harness revision needed (${signature})`
-      : `[outer-loop] Wall addition needed (${signature})`;
+      ? `[outer-loop] Harness revision needed (${signature} / ${scope})`
+      : `[outer-loop] Wall addition needed (${signature} / ${scope})`;
 
   const lines = [
     marker,
@@ -95,6 +123,7 @@ export function buildIssueAction(summary, kind, items, signature) {
     "",
     `Generated: ${summary.generated_at}`,
     `Repository: ${repo}`,
+    `Scope: ${scope}`,
     "",
     "## Evidence",
     "",
@@ -129,6 +158,7 @@ export function buildIssueAction(summary, kind, items, signature) {
     kind,
     dedupe_key: dedupeKey,
     signature,
+    scope,
     labels: ISSUE_LABELS[kind] ?? [],
     title,
     body: `${lines.join("\n")}\n`,

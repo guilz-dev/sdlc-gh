@@ -7,10 +7,11 @@
     {
       "action": "open_or_update_issue",
       "kind": "harness-revision",
-      "dedupe_key": "org/product:harness-revision:lint",
+      "dedupe_key": "org/product:harness-revision:lint:task:test-fix|wall:lint",
       "signature": "lint",
+      "scope": "task:test-fix|wall:lint",
       "labels": ["outer-loop:harness-revision", "autonomy:L0"],
-      "title": "[outer-loop] Harness revision needed (lint)",
+      "title": "[outer-loop] Harness revision needed (lint / task:test-fix|wall:lint)",
       "evidence_count": 1
     }
   ],

@@ -8,6 +8,7 @@ import {
   buildRoutingPlan,
   hasRepeatedFfFindings,
   hasRepeatedWallFindings,
+  inferRoutingScope,
   ISSUE_KIND,
   routingDedupeKey,
   routingMarker,
@@ -24,6 +25,7 @@ const plan = buildRoutingPlan(sample);
 assert.equal(plan.actions.length, 1);
 assert.equal(plan.actions[0].kind, ISSUE_KIND.HARNESS_REVISION);
 assert.ok(plan.actions[0].body.includes(routingMarker(plan.actions[0].dedupe_key)));
+assert.equal(plan.actions[0].scope, "task:test-fix|wall:lint");
 
 const wallSummary = {
   ...sample,
@@ -61,9 +63,17 @@ const singleFf = {
 assert.equal(buildRoutingPlan(singleFf).actions.length, 0);
 assert.ok(buildRoutingPlan(singleFf).skipped.length >= 1);
 
-const dedupeKey = routingDedupeKey("org/product", ISSUE_KIND.HARNESS_REVISION, "lint");
-const action = buildIssueAction(sample, ISSUE_KIND.HARNESS_REVISION, sample.classifications, "lint");
+assert.equal(inferRoutingScope(sample.classifications), "tasks:docs+test-fix");
+
+const dedupeKey = routingDedupeKey(
+  "org/product",
+  ISSUE_KIND.HARNESS_REVISION,
+  "lint",
+  "task:test-fix|wall:lint",
+);
+const action = plan.actions[0];
 assert.equal(bodyHasRoutingMarker(action.body, dedupeKey), true);
+assert.ok(action.title.includes("task:test-fix|wall:lint"));
 
 const dry = applyRoutingPlanDryRun(plan, {
   existingIssues: [{ number: 99, body: action.body }],
@@ -88,5 +98,33 @@ assert.equal(lintOnlyPlan.actions.length, 0);
 assert.ok(
   lintOnlyPlan.skipped.some((s) => s.reason.includes("without FF不足 classification")),
 );
+
+const otherScopeSummary = {
+  ...sample,
+  classifications: [
+    {
+      ...sample.classifications[1],
+      task_id: "55",
+      pr_number: 222,
+      task_class: "docs",
+    },
+    {
+      ...sample.classifications[1],
+      task_id: "56",
+      pr_number: 223,
+      task_class: "docs",
+    },
+  ],
+  rollup: {
+    ...sample.rollup,
+    by_classification: { FF不足: 2 },
+    repeated_failure_signatures: [
+      { wall_failure_type: "lint", record_count: 2, task_count: 2, task_ids: ["55", "56"] },
+    ],
+  },
+};
+const otherScopePlan = buildRoutingPlan(otherScopeSummary);
+assert.equal(otherScopePlan.actions[0].scope, "task:docs|wall:lint");
+assert.notEqual(otherScopePlan.actions[0].dedupe_key, plan.actions[0].dedupe_key);
 
 console.log("harness-review-routing scenarios ok");
