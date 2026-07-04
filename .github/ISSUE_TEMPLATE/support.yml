@@ -1,0 +1,56 @@
+name: Usage question
+description: Ask for help adopting or operating the harness
+title: "[support]: "
+body:
+  - type: dropdown
+    id: setup_type
+    attributes:
+      label: Setup type
+      options:
+        - Template repository
+        - Existing repository bootstrap
+        - Evaluating only
+    validations:
+      required: true
+
+  - type: dropdown
+    id: stack
+    attributes:
+      label: Stack
+      options:
+        - ts
+        - python
+        - go
+        - ruby
+        - php
+        - n/a
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question or blocker
+      description: Describe where adoption or operation is blocked.
+      placeholder: What are you trying to do, and where are you stuck?
+    validations:
+      required: true
+
+  - type: textarea
+    id: checks
+    attributes:
+      label: Checks already tried
+      description: Local commands or Actions jobs you already ran.
+      placeholder: |
+        - npm run validate
+        - harness-ci
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Include logs, screenshots, or links with secrets removed.
+    validations:
+      required: false

@@ -76,9 +76,11 @@ Use the PR template sections completely:
 
 This repository applies its own harness rules to itself.
 
-- Changes to `.github/**`, `evals/**`, `docs/telemetry-schema.md`, and `docs/operations.md` require review from the team configured in `.github/CODEOWNERS`
+- Changes to `.github/**`, `evals/**`, `docs/telemetry-schema.md`, and `docs/operations.md` are intended to require review from the team configured in `.github/CODEOWNERS`
 - Keep policy and workflow changes deterministic and testable
 - Prefer mechanical enforcement over adding more prompt text when both are possible
+
+In the template, `.github/CODEOWNERS` ships with placeholder owners and must be replaced by adopters. In this repository, if CODEOWNERS still contains placeholders, repository maintainers should treat those paths as manually gated until real owners are configured.
 
 ## Design guidance
 
@@ -92,6 +94,6 @@ If a proposal weakens one of those, call out the tradeoff explicitly in the PR.
 
 ## Reporting problems
 
-- For bugs, open a GitHub Issue with reproduction steps and expected behavior
+- For bugs, use the `Bug report` issue template with reproduction steps and expected behavior
 - For security issues, do not open a public Issue; follow `SECURITY.md`
-- For usage questions, see `SUPPORT.md`
+- For usage questions, use the `Usage question` issue template and see `SUPPORT.md`

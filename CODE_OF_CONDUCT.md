@@ -24,7 +24,7 @@ Project maintainers may remove, edit, or reject comments, issues, PRs, or other 
 
 ## Reporting
 
-If you experience or witness unacceptable behavior, contact the maintainers privately when possible. If private contact is not obvious, open a minimal public Issue requesting a private contact path without posting sensitive details.
+If you experience or witness unacceptable behavior, contact the maintainers privately when possible. If this repository does not yet publish a private contact path, open a minimal public Issue requesting one without posting sensitive details.
 
 ## Scope
 

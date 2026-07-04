@@ -1,0 +1,39 @@
+name: Feature request
+description: Propose an improvement to the harness, workflows, or adoption model
+title: "[feature]: "
+labels:
+  - task:infra
+  - autonomy:L0
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What pain point or gap are you trying to address?
+      placeholder: What is missing or too hard today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      placeholder: Describe the behavior or capability you want.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      placeholder: What did you try instead?
+    validations:
+      required: false
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Expected impact
+      description: Note affected stacks, workflows, or policy surfaces.
+    validations:
+      required: false

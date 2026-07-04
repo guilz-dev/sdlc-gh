@@ -2,10 +2,10 @@
 
 ## Where to ask what
 
-- Usage questions: open a GitHub Issue describing your repository type, selected stack, and where adoption is blocked
-- Bug reports: open a GitHub Issue with reproduction steps, expected behavior, and actual behavior
+- Usage questions: use the `Usage question` issue template and describe your repository type, selected stack, and where adoption is blocked
+- Bug reports: use the `Bug report` issue template with reproduction steps, expected behavior, and actual behavior
 - Security reports: follow `SECURITY.md` and do not post exploit details publicly
-- Design proposals: open an Issue before large workflow, policy, or architecture changes
+- Design proposals: use the `Feature request` issue template before large workflow, policy, or architecture changes
 
 ## What to include
 

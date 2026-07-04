@@ -14,7 +14,11 @@ This repository contains workflow templates, hooks, agent instructions, eval fix
 
 Please do not report security issues in public GitHub Issues or PRs.
 
-Instead, contact the maintainers privately with:
+Preferred path:
+
+- use GitHub private vulnerability reporting for this repository if it is enabled
+
+If private vulnerability reporting is not enabled here, contact the maintainers privately with:
 
 - a clear description of the issue
 - affected files or workflows
@@ -22,7 +26,7 @@ Instead, contact the maintainers privately with:
 - impact assessment
 - any suggested mitigation
 
-If you already know the appropriate maintainer or team for this repository, contact them directly. If not, open a minimal public Issue that only asks for a private contact path and do not include exploit details.
+If you already know the appropriate maintainer or team for this repository, contact them directly. If this repository does not yet publish a private contact path, open a minimal public Issue that only asks maintainers for one and do not include exploit details.
 
 ## Disclosure expectations
 
