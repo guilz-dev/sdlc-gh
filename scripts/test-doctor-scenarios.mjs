@@ -45,8 +45,18 @@ mkdirSync(join(templateMulti, ".github/workflows"), { recursive: true });
 writeFileSync(join(templateMulti, ".harness-stack"), "ts\n");
 writeFileSync(join(templateMulti, ".github/workflows/product-ci-ts.yml"), "name: product-ci-ts\n");
 writeFileSync(join(templateMulti, ".github/workflows/product-ci-go.yml"), "name: product-ci-go\n");
-writeFileSync(join(templateMulti, ".github/CODEOWNERS"), "* @my-org/harness-engineers\n");
+writeFileSync(join(templateMulti, ".github/CODEOWNERS"), "* @your-org/harness-engineers\n");
 const templateMode = localChecks(templateMulti, { nodeVersion: "22.0.0", templateMode: true });
 assert.ok(templateMode.entries.some((e) => e.label === "product-ci workflow" && e.status === "PASS"));
+assert.ok(templateMode.entries.some((e) => e.label === "CODEOWNERS" && e.status === "PASS"));
+
+const templatePersonalized = mkdtempSync(join(tmpdir(), "sdlc-gh-doctor-template-personal-"));
+mkdirSync(join(templatePersonalized, ".github/workflows"), { recursive: true });
+writeFileSync(join(templatePersonalized, ".harness-stack"), "ts\n");
+writeFileSync(join(templatePersonalized, ".github/workflows/product-ci-ts.yml"), "name: product-ci-ts\n");
+writeFileSync(join(templatePersonalized, ".github/workflows/product-ci-go.yml"), "name: product-ci-go\n");
+writeFileSync(join(templatePersonalized, ".github/CODEOWNERS"), "* @acme/platform\n");
+const templatePersonal = localChecks(templatePersonalized, { nodeVersion: "22.0.0", templateMode: true });
+assert.ok(templatePersonal.entries.some((e) => e.label === "CODEOWNERS" && e.status === "FAIL"));
 
 console.log("Doctor scenario tests passed");

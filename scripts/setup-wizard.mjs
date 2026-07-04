@@ -51,6 +51,7 @@ function parseArgs(argv) {
     dryRun: false,
     bootstrap: false,
     forceBootstrap: false,
+    patchCodeowners: false,
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -80,6 +81,8 @@ function parseArgs(argv) {
     } else if (value === "--force-bootstrap") {
       args.forceBootstrap = true;
       args.bootstrap = true;
+    } else if (value === "--patch-codeowners") {
+      args.patchCodeowners = true;
     } else if (value === "--help" || value === "-h") {
       printUsage();
       process.exit(0);
@@ -102,6 +105,7 @@ Options:
   --github-repo owner/name   GitHub repository for setup-github
   --mode new|existing        Bootstrap mode when harness is missing
   --template                 Template repo mode (multiple product-ci workflows)
+  --patch-codeowners         Replace CODEOWNERS placeholder (default off in --template mode)
   --with-eval-ruleset        Also apply harness-pr-eval-required ruleset
   --skip-github              Local files only; skip setup-github
   --bootstrap                Force bootstrap when harness is missing
@@ -111,8 +115,8 @@ Options:
 
 Examples:
   ./scripts/setup-wizard.mjs
+  ./scripts/setup-wizard.mjs --template --yes --stack ts
   ./scripts/setup-wizard.mjs --yes --stack ts --codeowners @acme/platform
-  ./scripts/setup-wizard.mjs --template --yes --stack ts --codeowners @acme/platform
 `);
 }
 
@@ -280,14 +284,21 @@ async function main() {
       }
     } else {
       stackId = await resolveStack(rl, repoRoot, stackId, args.yes);
-      const needsOwner = codeownersHasPlaceholder(repoRoot);
-      if (needsOwner) {
-        owner = await resolveCodeowners(rl, owner, args.yes, true);
-      } else if (owner) {
-        if (!isValidCodeownersOwner(owner)) fail(`Invalid CODEOWNERS owner: ${owner}`);
-        owner = owner.trim();
+      if (template && !args.patchCodeowners) {
+        console.log("Template repo: keeping CODEOWNERS placeholder (pass --patch-codeowners to replace).");
+        if (args.codeowners) {
+          console.log("::notice::--codeowners ignored in template mode without --patch-codeowners.");
+        }
       } else {
-        console.log("CODEOWNERS: placeholder already replaced.");
+        const needsOwner = codeownersHasPlaceholder(repoRoot);
+        if (needsOwner) {
+          owner = await resolveCodeowners(rl, owner, args.yes, true);
+        } else if (owner) {
+          if (!isValidCodeownersOwner(owner)) fail(`Invalid CODEOWNERS owner: ${owner}`);
+          owner = owner.trim();
+        } else {
+          console.log("CODEOWNERS: placeholder already replaced.");
+        }
       }
     }
 
@@ -297,7 +308,9 @@ async function main() {
       if (!gh.ok) fail(`${gh.reason}. Use --skip-github to configure local files only.`);
     }
 
-    const willPatchCodeowners = Boolean(owner) && codeownersHasPlaceholder(repoRoot);
+    const allowCodeownersPatch = !template || args.patchCodeowners;
+    const willPatchCodeowners =
+      allowCodeownersPatch && Boolean(owner) && codeownersHasPlaceholder(repoRoot);
     const ownerLabel = owner || "(unchanged)";
 
     const plan = buildWizardPlan({
@@ -367,7 +380,12 @@ async function main() {
     }
 
     console.log("\nSetup wizard complete.");
-    console.log("Next: commit local changes (e.g. CODEOWNERS), then open a test PR to verify required checks.");
+    if (template) {
+      console.log("Template repo: CODEOWNERS remains placeholder-only; commit .harness-stack is gitignored.");
+    } else {
+      console.log("Next: commit CODEOWNERS and open a test PR to verify required checks.");
+    }
+    console.log("Then: run `npm run check-l1-readiness` before starting spec-driven L1 delegation.");
   } finally {
     rl.close();
   }

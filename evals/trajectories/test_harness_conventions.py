@@ -149,6 +149,14 @@ def test_outer_loop_routing_labels_defined():
     assert "outer-loop:wall-addition" in routing
 
 
+def test_template_codeowners_keeps_placeholder():
+    codeowners = read(".github/CODEOWNERS")
+    validate = read("scripts/validate-harness.mjs")
+    assert "@your-org/harness-engineers" in codeowners
+    assert "detectRepoProfile" in validate
+    assert "CODEOWNERS_PLACEHOLDER" in validate
+
+
 def test_gh_aw_sources_include_required_sections():
     nightly = read(".github/workflows/nightly-harness-review.md")
     weekly = read(".github/workflows/weekly-redteam.md")

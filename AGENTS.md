@@ -19,6 +19,11 @@ For `task:docs` and `task:test-fix` delegated at `autonomy:L1`, the Issue embeds
 
 CI enforces completeness via `issue-spec-check`. Enforcement uses Issue **labels** applied by triager, not the form dropdown alone. v1 does not cover `feature-small`, `infra`, or `security-sensitive`.
 
+Before starting spec-driven L1 delegation, run readiness checks:
+
+- `npm run check-l1-readiness`
+- strict mode: `npm run check-l1-readiness -- --strict`
+
 ## Task classification
 
 Limits match `docs/operations.md` (CI enforces via `check-diff-size.mjs`).

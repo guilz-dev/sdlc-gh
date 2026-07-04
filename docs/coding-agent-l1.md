@@ -52,6 +52,24 @@ Use `.github/ISSUE_TEMPLATE/task.yml`. CI enforces completeness via the `issue-s
 - Copilot setup workflow green
 - Ruleset: `harness-static`, `diff-size`, `issue-spec-check` (for L1 repos), stack `product-ci-*`
 
+## Readiness check (recommended)
+
+Run before creating the first L1 Issue:
+
+```bash
+npm run check-l1-readiness
+npm run check-l1-readiness -- --strict
+```
+
+Direct script form is also available: `node scripts/check-l1-readiness.mjs --strict`.
+
+What it verifies:
+
+- local harness assets and doctor checks
+- Issue template and agent files required for L1 delegation
+- labels/rulesets/workflow status on GitHub when `gh` is authenticated
+- unresolved manual prerequisites (for example Copilot coding agent entitlement)
+
 ## Success criteria
 
 - Draft PR passes all required checks

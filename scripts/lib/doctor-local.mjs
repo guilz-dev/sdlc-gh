@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { getStack } from "./stacks.mjs";
+import { CODEOWNERS_PLACEHOLDER } from "./setup-wizard.mjs";
 
 export function result(status, label, detail, fix = "") {
   return { status, label, detail, fix };
@@ -65,17 +66,33 @@ export function localChecks(repoRoot, { nodeVersion = process.versions.node, tem
   const codeownersFile = join(repoRoot, ".github/CODEOWNERS");
   if (!existsSync(codeownersFile)) {
     entries.push(result("FAIL", "CODEOWNERS", "missing", "Re-run `./scripts/bootstrap-harness.sh`."));
-  } else if (readFileSync(codeownersFile, "utf8").includes("@your-org/harness-engineers")) {
-    entries.push(
-      result(
-        "FAIL",
-        "CODEOWNERS",
-        "placeholder team still present",
-        "Run `./scripts/setup-wizard.mjs` or `./scripts/bootstrap-harness.sh --codeowners-team @org/team`.",
-      ),
-    );
   } else {
-    entries.push(result("PASS", "CODEOWNERS", "team placeholder replaced"));
+    const hasPlaceholder = readFileSync(codeownersFile, "utf8").includes(CODEOWNERS_PLACEHOLDER);
+    if (templateMode) {
+      if (hasPlaceholder) {
+        entries.push(result("PASS", "CODEOWNERS", "template placeholder preserved"));
+      } else {
+        entries.push(
+          result(
+            "FAIL",
+            "CODEOWNERS",
+            "template repo must keep placeholder owners",
+            `Restore ${CODEOWNERS_PLACEHOLDER} in .github/CODEOWNERS (do not commit personal or org-specific owners here).`,
+          ),
+        );
+      }
+    } else if (hasPlaceholder) {
+      entries.push(
+        result(
+          "FAIL",
+          "CODEOWNERS",
+          "placeholder team still present",
+          "Run `./scripts/setup-wizard.mjs` or `./scripts/bootstrap-harness.sh --codeowners-team @org/team`.",
+        ),
+      );
+    } else {
+      entries.push(result("PASS", "CODEOWNERS", "team placeholder replaced"));
+    }
   }
 
   const nodeMajor = Number.parseInt(nodeVersion.split(".")[0], 10);

@@ -84,7 +84,7 @@ Detailed steps and rollback guidance: [docs/adoption.md](docs/adoption.md).
 | Setting | Location | Purpose |
 |---------|----------|---------|
 | Primary stack | `.harness-stack` (gitignored locally) | Selects `product-ci-{stack}` for rulesets and doctor |
-| Harness review owners | `.github/CODEOWNERS` | Required reviewers for `.github/`, `evals/`, policy docs |
+| Harness review owners | `.github/CODEOWNERS` | Required reviewers for `.github/`, `evals/`, policy docs. **Product repos:** replace placeholder and commit. **This template repo:** keep `@your-org/harness-engineers` in git; use `--template` wizard mode locally. |
 | Task / autonomy labels | `.github/labels.yml` → GitHub | Issue/PR classification (`task:*`, `autonomy:*`) |
 | Branch protection | `main-protection` ruleset | Required CI checks + code owner review |
 | Optional eval gate | `harness-pr-eval-required` ruleset | Requires eval-ci jobs on PRs to `main` |
@@ -95,8 +95,36 @@ Run `./scripts/setup-wizard.mjs` to apply the required install settings interact
 
 ```bash
 ./scripts/setup-wizard.mjs --yes --stack ts --codeowners @your-org/harness-engineers
-./scripts/setup-wizard.mjs --template --yes --stack ts --codeowners @your-org/harness-engineers
+./scripts/setup-wizard.mjs --template --yes --stack ts
 ```
+
+**Template repo note:** When dogfooding this repository itself, run the wizard with `--template`. It writes gitignored `.harness-stack` and syncs GitHub rulesets, but **does not** replace the committed CODEOWNERS placeholder unless you pass `--patch-codeowners`. Use a separate product repository (or fork) when you need real code-owner enforcement with committed owners.
+
+## Start Spec-Driven L1 Flow
+
+To run autonomous implementation from a spec (CC-SD contract) without guesswork:
+
+1. Prepare repository settings with `./scripts/setup-wizard.mjs`
+2. Verify L1 readiness:
+
+```bash
+npm run check-l1-readiness
+npm run check-l1-readiness -- --strict
+```
+
+3. Create an Issue from `.github/ISSUE_TEMPLATE/task.yml`
+4. Fill `Goal`, `Non-goals`, `Constraints`, `Acceptance criteria`, `Rollback hints`
+5. Add labels (`task:docs` or `task:test-fix`) + `autonomy:L1`
+6. Assign `triager`, then `implementer`
+
+Readiness checker notes:
+
+- validates local harness assets and doctor checks
+- validates GitHub labels/rulesets and latest `copilot-setup-steps` run when `gh` is authenticated
+- reports items that still require manual confirmation (Copilot coding agent entitlement)
+- supports machine-readable output via `npm run check-l1-readiness -- --json`
+
+Detailed trial guide: [docs/coding-agent-l1.md](docs/coding-agent-l1.md).
 
 ## Repository layout
 

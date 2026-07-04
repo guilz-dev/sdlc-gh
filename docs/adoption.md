@@ -44,11 +44,11 @@ Apply in this order (or run `./scripts/setup-wizard.mjs` to perform steps 1–2 
 `./scripts/setup-wizard.mjs` orchestrates Phase 0–1 install settings:
 
 - writes `.harness-stack` (primary stack for rulesets)
-- replaces the `CODEOWNERS` placeholder
+- replaces the `CODEOWNERS` placeholder on **product repos** (skipped by default with `--template`)
 - runs `setup-github.sh` (labels + rulesets)
 - runs `doctor --strict` (pass `--template` for multi-stack template repos)
 
-Non-interactive flags: `--yes`, `--stack`, `--codeowners`, `--github-repo`, `--with-eval-ruleset`, `--skip-github`, `--dry-run`, `--force-bootstrap` (destructive; never with `--yes`).
+Non-interactive flags: `--yes`, `--stack`, `--codeowners`, `--github-repo`, `--with-eval-ruleset`, `--skip-github`, `--dry-run`, `--patch-codeowners` (opt-in CODEOWNERS replacement in template mode), `--force-bootstrap` (destructive; never with `--yes`).
 
 ## Behavior / spec corrections (template updates)
 

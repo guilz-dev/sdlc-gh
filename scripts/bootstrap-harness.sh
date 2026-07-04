@@ -356,11 +356,11 @@ cp "$TEMPLATE_ROOT/.github/ruleset.harness-eval.example.json" "$REPO/.github/" 2
 mkdir -p "$REPO/scripts/lib"
 for s in validate-harness.mjs check-diff-size.mjs check-issue-spec.mjs select-eval-jobs.mjs \
   check-e2e-manifest.mjs validate-telemetry.mjs emit-telemetry-artifact.mjs fetch-telemetry-artifacts.mjs \
-  aggregate-harness-review.mjs route-harness-review.mjs check-gh-aw-dogfood-scope.mjs validate-gh-aw-compile.mjs \
+  aggregate-harness-review.mjs route-harness-review.mjs check-l1-readiness.mjs check-gh-aw-dogfood-scope.mjs validate-gh-aw-compile.mjs \
   emit-gh-aw-dogfood-report.mjs check-open-pr-limit.mjs test-hooks-scenarios.mjs test-issue-spec-scenarios.mjs \
   test-diff-size-scenarios.mjs test-e2e-manifest-scenarios.mjs test-setup-github-scenarios.mjs test-doctor-scenarios.mjs \
   test-telemetry-artifact-scenarios.mjs test-harness-review-scenarios.mjs test-harness-review-routing-scenarios.mjs test-gh-aw-dogfood-scenarios.mjs \
-  test-bootstrap-guidance-scenarios.mjs test-setup-wizard-scenarios.mjs \
+  test-bootstrap-guidance-scenarios.mjs test-l1-readiness-scenarios.mjs test-setup-wizard-scenarios.mjs \
   harness-drift-report.mjs check-eval-score-drift.mjs run-e2e-bench.mjs doctor.mjs setup-github.mjs setup-wizard.mjs; do
   cp "$TEMPLATE_ROOT/scripts/$s" "$REPO/scripts/" 2>/dev/null || true
 done

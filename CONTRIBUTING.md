@@ -80,7 +80,7 @@ This repository applies its own harness rules to itself.
 - Keep policy and workflow changes deterministic and testable
 - Prefer mechanical enforcement over adding more prompt text when both are possible
 
-In the template, `.github/CODEOWNERS` ships with placeholder owners and must be replaced by adopters. In this repository, if CODEOWNERS still contains placeholders, repository maintainers should treat those paths as manually gated until real owners are configured.
+In the template, `.github/CODEOWNERS` ships with placeholder owners and must be replaced by adopters on **product repositories**. On **this template repository**, keep the placeholder in git; run `./scripts/setup-wizard.mjs --template` for local dogfood without committing personal or org-specific owners.
 
 ## Design guidance
 

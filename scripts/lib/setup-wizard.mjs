@@ -130,6 +130,12 @@ export function buildWizardPlan(options) {
       action: "patch",
       detail: `replace ${CODEOWNERS_PLACEHOLDER} -> ${owner}`,
     });
+  } else if (template) {
+    steps.push({
+      id: "codeowners",
+      action: "skip",
+      detail: `keep template placeholder (${CODEOWNERS_PLACEHOLDER})`,
+    });
   } else if (owner && owner !== "(unchanged)") {
     steps.push({
       id: "codeowners",

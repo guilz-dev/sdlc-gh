@@ -11,6 +11,7 @@ import {
   BOOTSTRAP_SCRIPT_MJS,
   SCRIPT_LIB_IMPORTS,
 } from "./lib/bootstrap-copy.mjs";
+import { CODEOWNERS_PLACEHOLDER, detectRepoProfile } from "./lib/setup-wizard.mjs";
 
 const ROOT = process.cwd();
 let errors = 0;
@@ -155,6 +156,21 @@ const bootstrapSh = readFileSync(join(ROOT, "scripts/bootstrap-harness.sh"), "ut
 for (const lib of BOOTSTRAP_LIB_FILES) {
   if (!bootstrapSh.includes(lib)) {
     fail(`bootstrap-harness.sh does not copy scripts/lib/${lib}`);
+  }
+}
+
+const templateProfile = detectRepoProfile(ROOT);
+if (templateProfile.template) {
+  const codeownersPath = join(ROOT, ".github/CODEOWNERS");
+  if (!existsSync(codeownersPath)) {
+    fail("template repo missing .github/CODEOWNERS");
+  } else {
+    const codeowners = readFileSync(codeownersPath, "utf8");
+    if (!codeowners.includes(CODEOWNERS_PLACEHOLDER)) {
+      fail(
+        `template repo .github/CODEOWNERS must keep placeholder ${CODEOWNERS_PLACEHOLDER} (do not commit personal or org-specific owners)`,
+      );
+    }
   }
 }
 

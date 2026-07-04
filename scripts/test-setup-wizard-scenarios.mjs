@@ -44,11 +44,14 @@ assert.equal(suggestStack(templateDir), "ts");
 writeHarnessStack(templateDir, "ts");
 assert.equal(readFileSync(join(templateDir, ".harness-stack"), "utf8"), "ts\n");
 assert.equal(codeownersHasPlaceholder(templateDir), true);
-applyCodeownersOwner(templateDir, "@acme/platform");
-assert.equal(codeownersHasPlaceholder(templateDir), false);
 
 const templateDoctor = localChecks(templateDir, { nodeVersion: "22.0.0", templateMode: true });
 assert.ok(templateDoctor.entries.every((entry) => entry.status === "PASS"));
+
+applyCodeownersOwner(templateDir, "@acme/platform");
+assert.equal(codeownersHasPlaceholder(templateDir), false);
+const templateDoctorPersonalized = localChecks(templateDir, { nodeVersion: "22.0.0", templateMode: true });
+assert.ok(templateDoctorPersonalized.entries.some((e) => e.label === "CODEOWNERS" && e.status === "FAIL"));
 
 const multiProduct = localChecks(templateDir, { nodeVersion: "22.0.0", templateMode: false });
 assert.ok(multiProduct.entries.some((e) => e.label === "product-ci workflow" && e.status === "FAIL"));
@@ -92,5 +95,20 @@ const unchangedPlan = buildWizardPlan({
 });
 assert.ok(!unchangedPlan.steps.some((step) => step.id === "codeowners" && step.action === "patch"));
 assert.ok(unchangedPlan.steps.some((step) => step.id === "codeowners" && step.action === "skip"));
+
+const templatePlan = buildWizardPlan({
+  repoRoot: templateDir,
+  stackId: "ts",
+  owner: "(unchanged)",
+  githubRepo: "acme/sdlc-gh",
+  template: true,
+  withEvalRuleset: false,
+  yes: true,
+  skipGithub: false,
+  dryRun: false,
+  writeHarnessStack: true,
+  patchCodeowners: false,
+});
+assert.ok(templatePlan.steps.some((step) => step.id === "codeowners" && step.detail.includes("keep template placeholder")));
 
 console.log("Setup wizard scenario tests passed");
