@@ -68,6 +68,19 @@ Download `gh-aw-dogfood-{run_id}` artifacts from Actions and diff `criteria` blo
 - safe-output regressions
 - scope violations
 
+### Baseline run (2026-07-04)
+
+First green dogfood CI on `main` after track landing ([#7](https://github.com/guilz-dev/sdlc-gh/issues/7)):
+
+| Field | Value |
+|-------|-------|
+| Run | [workflow_dispatch `28712363476`](https://github.com/guilz-dev/sdlc-gh/actions/runs/28712363476) |
+| Compiler | `gh aw` v0.81.6 (pinned in dogfood CI) |
+| `criteria.compile.skipped` | `false` |
+| Artifact | `gh-aw-dogfood-28712363476` |
+
+Use this run as the reference point when diffing future dogfood reports.
+
 ## Rollback
 
 Trigger rollback when:
