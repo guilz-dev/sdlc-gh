@@ -38,6 +38,10 @@ function parseLabelEnv(name) {
     .filter(Boolean);
 }
 
+function enforcedByPrLabels() {
+  return shouldEnforceCcsd(parseLabelEnv("PR_LABELS"));
+}
+
 function proxyLabelsForFetchFailure(issueLabels = []) {
   const prLabels = parseLabelEnv("PR_LABELS");
   return [...new Set([...issueLabels, ...prLabels])];
@@ -159,6 +163,12 @@ function main() {
   }
 
   if (issue.noIssue) {
+    if (enforcedByPrLabels()) {
+      error(
+        "PR is labeled for L1 docs/test-fix but is not tied to a resolvable Issue; link exactly one Issue with a complete CC-SD contract",
+      );
+      process.exit(1);
+    }
     warn(
       "PR is not tied to a resolvable Issue; skipping CC-SD enforcement (CI uses Issue labels, not the form dropdown)",
     );

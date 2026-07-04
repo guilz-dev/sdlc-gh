@@ -51,6 +51,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: Validate linked Issue CC-SD contract
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}

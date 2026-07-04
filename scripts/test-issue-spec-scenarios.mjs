@@ -202,6 +202,14 @@ assertExit(
   0,
 );
 
+assertExit(
+  "docs+L1 without linked issue fails when inferred from PR labels",
+  runCheck({
+    PR_LABELS: "task:docs,autonomy:L1",
+  }),
+  1,
+);
+
 for (const taskClass of ["infra", "security-sensitive"]) {
   assertExit(
     `${taskClass}+L1 skips (passes)`,

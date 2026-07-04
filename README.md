@@ -166,6 +166,7 @@ Run from the repository root:
 ```bash
 npm run validate          # harness asset consistency
 npm run test-hooks        # hook block/allow scenarios
+npm run test-issue-spec   # CC-SD issue-spec validator scenarios
 npm run check-e2e         # e2e bench manifest checks
 npm run verify-bootstrap  # bootstrap integration test (all stacks)
 ```
