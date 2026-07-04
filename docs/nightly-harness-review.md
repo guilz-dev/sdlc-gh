@@ -10,7 +10,7 @@ Standard GitHub Actions outer-loop job that aggregates inner-loop telemetry arti
 | Schedule | `0 2 * * *` (02:00 UTC daily) |
 | Manual | `workflow_dispatch` with optional `window_hours` (default 24) |
 
-gh-aw stub (`.github/workflows/nightly-harness-review.md` + `.lock.yml`) remains for a future epic; this workflow is the **baseline implementation**.
+gh-aw stub (`.github/workflows/nightly-harness-review.md` + `.lock.yml`) documents promotion criteria and safe-outputs; **GHA** [nightly-harness-review.yml](../.github/workflows/nightly-harness-review.yml) is the operational baseline.
 
 ## Pipeline
 
@@ -63,14 +63,30 @@ node scripts/aggregate-harness-review.mjs
 
 ```bash
 node scripts/test-harness-review-scenarios.mjs
+node scripts/test-harness-review-routing-scenarios.mjs
 ```
 
 ## Follow-up automation
 
-The JSON summary is intended input for:
+The JSON summary feeds `scripts/route-harness-review.mjs` (#4), which opens or updates GitHub issues when thresholds are met.
 
-- morning queue triage ([operations.md](operations.md))
-- harness revision Issues / PR proposals (manual or future bot)
-- KPI updates ([kpi-baseline.md](kpi-baseline.md))
+## Issue routing
 
-Non-goals for this workflow: automatic code changes, Langfuse dependency, weekly red-team.
+| Classification | Threshold | Issue kind | Labels |
+|----------------|-----------|------------|--------|
+| **FF不足** | ≥2 task groups **or** repeated `lint` signature (`record_count >= 2`) | harness-revision | `outer-loop:harness-revision`, `autonomy:L0` |
+| **壁不足** | ≥2 task groups **or** CI-pass + review-reject proxy | wall-addition | `outer-loop:wall-addition`, `autonomy:L0` |
+
+Dedupe: HTML comment marker `<!-- harness-routing-key: {repo}:{kind}:{signature} -->` in the issue body. Existing open issues with the same key are **updated**, not duplicated.
+
+Dry-run locally:
+
+```bash
+node scripts/aggregate-harness-review.mjs
+HARNESS_ROUTING_DRY_RUN=1 node scripts/route-harness-review.mjs
+cat harness-review/harness-review-routing-plan.json
+```
+
+Outputs also written to `harness-review/harness-review-routing-results.json` when live.
+
+Non-goals: automatic code changes, proposal PR creation (issues only), Langfuse dependency, weekly red-team.

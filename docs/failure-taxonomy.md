@@ -18,5 +18,6 @@ Classify failures for outer-loop routing (arch.md §5.3).
 
 1. Auto-retry inner loop (where allowed per `docs/operations.md`)
 2. Structured comment on PR with `wall_failure_type`
-3. Weekly aggregate in morning queue
-4. Repeated FF不足 → harness revision Issue
+3. Nightly GHA aggregate ([nightly-harness-review.md](nightly-harness-review.md))
+4. Repeated **FF不足** → `outer-loop:harness-revision` issue (automated when thresholds met)
+5. Repeated **壁不足** → `outer-loop:wall-addition` issue (automated when thresholds met)

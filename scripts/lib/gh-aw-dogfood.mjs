@@ -49,6 +49,34 @@ export const DOGFOOD_EVALUATION_CRITERIA = [
   "reviewability",
 ];
 
+export const GH_AW_SOURCE_REQUIRED_SECTIONS = {
+  "nightly-harness-review": [
+    "## Required inputs",
+    "## Forbidden operations",
+    "## Expected outputs",
+    "## Fallback when gh-aw regresses",
+    "## Promotion criteria",
+  ],
+  "weekly-redteam": [
+    "## Required inputs",
+    "## Forbidden operations",
+    "## Expected outputs",
+    "## Fallback when gh-aw or garak regresses",
+    "## Promotion criteria",
+  ],
+};
+
+/**
+ * @param {string} content
+ * @param {string} workflowId
+ * @returns {{ ok: boolean, missing: string[] }}
+ */
+export function validateGhAwSourceSections(content, workflowId) {
+  const required = GH_AW_SOURCE_REQUIRED_SECTIONS[workflowId] ?? [];
+  const missing = required.filter((section) => !String(content).includes(section));
+  return { ok: missing.length === 0, missing };
+}
+
 /**
  * @param {string} path
  * @returns {boolean}

@@ -4,6 +4,7 @@
  */
 
 export const REVIEW_SCHEMA_VERSION = "1";
+export const REVIEW_OUT_DIR = "harness-review";
 export const MAX_RETRIES = 3;
 
 /** @type {readonly string[]} */

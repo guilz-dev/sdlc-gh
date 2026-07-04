@@ -14,6 +14,7 @@ export const BOOTSTRAP_LIB_FILES = [
   "doctor-local.mjs",
   "telemetry-artifact.mjs",
   "harness-review.mjs",
+  "harness-review-routing.mjs",
   "gh-aw-dogfood.mjs",
 ];
 
@@ -27,6 +28,7 @@ export const BOOTSTRAP_SCRIPT_MJS = [
   "emit-telemetry-artifact.mjs",
   "fetch-telemetry-artifacts.mjs",
   "aggregate-harness-review.mjs",
+  "route-harness-review.mjs",
   "check-gh-aw-dogfood-scope.mjs",
   "validate-gh-aw-compile.mjs",
   "emit-gh-aw-dogfood-report.mjs",
@@ -39,6 +41,7 @@ export const BOOTSTRAP_SCRIPT_MJS = [
   "test-doctor-scenarios.mjs",
   "test-telemetry-artifact-scenarios.mjs",
   "test-harness-review-scenarios.mjs",
+  "test-harness-review-routing-scenarios.mjs",
   "test-gh-aw-dogfood-scenarios.mjs",
   "test-bootstrap-guidance-scenarios.mjs",
   "harness-drift-report.mjs",
@@ -87,6 +90,8 @@ export const SCRIPT_LIB_IMPORTS = {
   "fetch-telemetry-artifacts.mjs": [],
   "aggregate-harness-review.mjs": ["harness-review.mjs"],
   "test-harness-review-scenarios.mjs": ["harness-review.mjs"],
+  "route-harness-review.mjs": ["harness-review-routing.mjs"],
+  "test-harness-review-routing-scenarios.mjs": ["harness-review-routing.mjs"],
   "check-gh-aw-dogfood-scope.mjs": ["gh-aw-dogfood.mjs"],
   "validate-gh-aw-compile.mjs": ["gh-aw-dogfood.mjs"],
   "emit-gh-aw-dogfood-report.mjs": ["gh-aw-dogfood.mjs"],

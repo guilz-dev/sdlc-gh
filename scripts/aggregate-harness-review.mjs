@@ -4,13 +4,13 @@
  */
 import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import {
   buildHarnessReviewSummary,
   formatHarnessReviewMarkdown,
+  REVIEW_OUT_DIR,
 } from "./lib/harness-review.mjs";
 import { DEFAULT_COLLECT_DIR, loadTelemetryJsonFiles } from "./fetch-telemetry-artifacts.mjs";
-
-export const REVIEW_OUT_DIR = "harness-review";
 
 function main() {
   const inputDir = process.env.TELEMETRY_COLLECT_DIR || DEFAULT_COLLECT_DIR;
@@ -43,4 +43,6 @@ function main() {
   }
 }
 
-main();
+const isMain =
+  process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (isMain) main();

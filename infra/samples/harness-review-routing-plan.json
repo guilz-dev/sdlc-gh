@@ -1,0 +1,18 @@
+{
+  "schema_version": "1",
+  "generated_at": "2026-07-04T02:05:00.000Z",
+  "source_summary_at": "2026-07-04T02:00:00.000Z",
+  "repo": "org/product",
+  "actions": [
+    {
+      "action": "open_or_update_issue",
+      "kind": "harness-revision",
+      "dedupe_key": "org/product:harness-revision:lint",
+      "signature": "lint",
+      "labels": ["outer-loop:harness-revision", "autonomy:L0"],
+      "title": "[outer-loop] Harness revision needed (lint)",
+      "evidence_count": 1
+    }
+  ],
+  "skipped": []
+}

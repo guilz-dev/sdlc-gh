@@ -131,11 +131,36 @@ def test_nightly_harness_review_bootstrap_and_workflow():
     assert "nightly-harness-review.yml" in bootstrap
     assert "fetch-telemetry-artifacts.mjs" in bootstrap
     assert "aggregate-harness-review.mjs" in bootstrap
+    assert "route-harness-review.mjs" in bootstrap
     assert "harness-review.mjs" in bootstrap
     assert (ROOT / ".github/workflows/nightly-harness-review.yml").is_file()
     nightly = read(".github/workflows/nightly-harness-review.yml")
     assert "fetch-telemetry-artifacts.mjs" in nightly
     assert "aggregate-harness-review.mjs" in nightly
+    assert "route-harness-review.mjs" in nightly
+
+
+def test_outer_loop_routing_labels_defined():
+    labels = read(".github/labels.yml")
+    routing = read("scripts/lib/harness-review-routing.mjs")
+    assert "outer-loop:harness-revision" in labels
+    assert "outer-loop:wall-addition" in labels
+    assert "outer-loop:harness-revision" in routing
+    assert "outer-loop:wall-addition" in routing
+
+
+def test_gh_aw_sources_include_required_sections():
+    nightly = read(".github/workflows/nightly-harness-review.md")
+    weekly = read(".github/workflows/weekly-redteam.md")
+    for section in (
+        "## Required inputs",
+        "## Forbidden operations",
+        "## Expected outputs",
+        "## Promotion criteria",
+    ):
+        assert section in nightly
+        assert section in weekly
+    assert "GH_AW_SOURCE_REQUIRED_SECTIONS" in read("scripts/lib/gh-aw-dogfood.mjs")
 
 
 def _parse_ccsd_exports() -> tuple[list[str], list[str], list[str]]:

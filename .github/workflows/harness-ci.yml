@@ -62,6 +62,9 @@ jobs:
       - name: Harness review scenario tests
         run: node scripts/test-harness-review-scenarios.mjs
 
+      - name: Harness review routing scenario tests
+        run: node scripts/test-harness-review-routing-scenarios.mjs
+
       - name: gh-aw dogfood scenario tests
         run: node scripts/test-gh-aw-dogfood-scenarios.mjs
 

@@ -53,7 +53,7 @@ env:
 
 Daily ~30 min checklist:
 
-1. Review nightly harness review PRs (gh-aw)
+1. Review nightly harness review summaries (GHA) and routed `outer-loop:*` issues
 2. Triage `harness:eval-drift` issues
 3. Classify failures per [failure-taxonomy.md](failure-taxonomy.md)
 4. Update [kpi-baseline.md](kpi-baseline.md) if metrics available

@@ -13,6 +13,7 @@ on:
 permissions:
   actions: read
   contents: read
+  issues: write
 
 jobs:
   review:
@@ -40,6 +41,13 @@ jobs:
           TELEMETRY_COLLECT_DIR: telemetry-collected
           HARNESS_REVIEW_OUT_DIR: harness-review
         run: node scripts/aggregate-harness-review.mjs
+
+      - name: Route repeated failures to issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          HARNESS_REVIEW_OUT_DIR: harness-review
+        run: node scripts/route-harness-review.mjs
 
       - name: Upload harness review summary
         uses: actions/upload-artifact@v4

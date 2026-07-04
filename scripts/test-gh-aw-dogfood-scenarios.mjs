@@ -8,6 +8,7 @@ import {
   isDogfoodAllowedPath,
   parseGhAwLockMetadata,
   parseGhAwWorkflowMarkdown,
+  validateGhAwSourceSections,
   validateSafeOutputs,
 } from "./lib/gh-aw-dogfood.mjs";
 import { readFileSync } from "node:fs";
@@ -33,10 +34,15 @@ const nightlyMd = readFileSync(".github/workflows/nightly-harness-review.md", "u
 const parsed = parseGhAwWorkflowMarkdown(nightlyMd);
 assert.ok(parsed?.fields?.["safe-outputs"]);
 assert.equal(validateSafeOutputs(parsed.fields).ok, true);
+assert.equal(validateGhAwSourceSections(nightlyMd, "nightly-harness-review").ok, true);
+assert.ok(parsed.fields["safe-outputs"]["create-issue"]);
 
 const redteamMd = readFileSync(".github/workflows/weekly-redteam.md", "utf8");
 const redteam = parseGhAwWorkflowMarkdown(redteamMd);
 assert.equal(validateSafeOutputs(redteam.fields).ok, true);
+assert.equal(validateGhAwSourceSections(redteamMd, "weekly-redteam").ok, true);
+assert.ok(redteam.fields["safe-outputs"]["create-issue"]);
+assert.equal(redteam.fields["safe-outputs"]["create-pull-request"], undefined);
 
 const lockMeta = parseGhAwLockMetadata(
   readFileSync(".github/workflows/nightly-harness-review.lock.yml", "utf8"),
