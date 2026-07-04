@@ -1,0 +1,6 @@
+{
+  "eval_pass_rate": 85,
+  "production_acceptance_rate": 70,
+  "updated": "2026-07-04",
+  "_comment": "Update weekly from kpi-baseline.md; eval-drift workflow reads this file"
+}

@@ -1,0 +1,14 @@
+id: e2e-004
+class: refactor
+stack: go
+description: Validate Go API rename without behavior change
+acceptance:
+  - go test ./... passes
+  - Public API uses Sum
+verification_commands:
+  - sample/go::env GOCACHE=/private/tmp/sdlc-gh-go-cache go test ./...
+verification_contains:
+  - sample/go/add.go::func Sum(a, b int) int {
+  - sample/go/add_test.go::if got := Sum(2, 3); got != 5 {
+verification_not_contains:
+  - sample/go/add.go::func Add(

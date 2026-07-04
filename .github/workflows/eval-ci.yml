@@ -1,0 +1,123 @@
+name: Eval CI
+
+on:
+  pull_request:
+    paths:
+      - ".github/**"
+      - "AGENTS.md"
+      - "prompts/**"
+      - "evals/**"
+  schedule:
+    - cron: "0 6 * * 1"
+
+jobs:
+  select:
+    runs-on: ubuntu-latest
+    outputs:
+      jobs: ${{ steps.sel.outputs.jobs }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - id: sel
+        env:
+          BASE_SHA: origin/${{ github.base_ref }}
+        run: node scripts/select-eval-jobs.mjs
+
+  prompt-eval:
+    needs: select
+    if: contains(needs.select.outputs.jobs, 'prompt-eval')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prompt eval (gh models)
+        run: |
+          shopt -s nullglob
+          files=(prompts/*.prompt.yml)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No .prompt.yml files; skipping"
+            exit 0
+          fi
+          if ! command -v gh >/dev/null; then
+            echo "::error::gh CLI required when prompt files exist"
+            exit 1
+          fi
+          for f in "${files[@]}"; do
+            echo "Evaluating $f"
+            gh models eval "$f"
+          done
+
+  agent-policy:
+    needs: select
+    if: contains(needs.select.outputs.jobs, 'agent-policy')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate agent definitions
+        run: node scripts/validate-harness.mjs
+
+  trajectory-conventions:
+    needs: select
+    if: contains(needs.select.outputs.jobs, 'trajectory-conventions')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Harness convention tests
+        run: |
+          pip install pytest
+          pytest evals/trajectories -q
+
+  trajectory-task:
+    needs: select
+    if: contains(needs.select.outputs.jobs, 'trajectory-task')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Skill / task rubric tests
+        run: |
+          pip install pytest
+          pytest evals/trajectories -q
+
+  meta-eval:
+    needs: select
+    if: contains(needs.select.outputs.jobs, 'meta-eval')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: E2E manifest and task definitions
+        run: |
+          node scripts/check-e2e-manifest.mjs
+          node scripts/run-e2e-bench.mjs
+          pip install pytest
+          pytest evals/trajectories -q
+
+  e2e-bench:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: E2E bench manifest and tasks
+        run: |
+          node scripts/check-e2e-manifest.mjs
+          node scripts/run-e2e-bench.mjs

@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "min_tasks": 7,
+  "last_rotated": "2026-07-04T00:00:00Z",
+  "tasks": [
+    { "id": "e2e-001", "class": "docs", "description": "Validate README heading acceptance", "stack": "any" },
+    { "id": "e2e-002", "class": "test-fix", "description": "Validate sample/ts unit-test acceptance", "stack": "ts" },
+    { "id": "e2e-003", "class": "test-fix", "description": "Validate sample/python unit-test acceptance", "stack": "python" },
+    { "id": "e2e-004", "class": "refactor", "description": "Validate Go API rename without behavior change", "stack": "go" },
+    { "id": "e2e-005", "class": "docs", "description": "Validate docstring presence on public API", "stack": "python" },
+    { "id": "e2e-006", "class": "test-fix", "description": "Validate sample/ruby unit-test acceptance", "stack": "ruby" },
+    { "id": "e2e-007", "class": "test-fix", "description": "Validate sample/php unit-test acceptance", "stack": "php" }
+  ]
+}

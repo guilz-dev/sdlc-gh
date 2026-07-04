@@ -1,0 +1,10 @@
+id: e2e-007
+class: test-fix
+stack: php
+description: Validate sample/php unit-test acceptance
+acceptance:
+  - phpunit passes in sample/php
+verification_commands:
+  - sample/php::composer test
+verification_contains:
+  - sample/php/tests/AddTest.php::$this->assertSame(5, Add::add(2, 3));

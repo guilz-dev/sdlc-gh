@@ -1,0 +1,64 @@
+name: Copilot setup
+
+on:
+  workflow_dispatch:
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        if: hashFiles('sample/ts/package-lock.json') != ''
+        with:
+          node-version: "22"
+
+      - uses: actions/setup-python@v5
+        if: hashFiles('sample/python/requirements-dev.txt') != ''
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-go@v5
+        if: hashFiles('sample/go/go.mod') != ''
+        with:
+          go-version: "1.22"
+
+      - uses: ruby/setup-ruby@v1
+        if: hashFiles('sample/ruby/Gemfile.lock') != ''
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: sample/ruby
+
+      - uses: shivammathur/setup-php@v2
+        if: hashFiles('sample/php/composer.lock') != ''
+        with:
+          php-version: "8.2"
+          coverage: none
+          tools: composer
+
+      - name: Install TS sample deps
+        if: hashFiles('sample/ts/package-lock.json') != ''
+        working-directory: sample/ts
+        run: npm ci
+
+      - name: Install Python sample deps
+        if: hashFiles('sample/python/requirements-dev.txt') != ''
+        working-directory: sample/python
+        run: pip install -r requirements-dev.txt
+
+      - name: Install Go sample deps
+        if: hashFiles('sample/go/go.mod') != ''
+        working-directory: sample/go
+        run: go mod download
+
+      - name: Install Ruby sample deps
+        if: hashFiles('sample/ruby/Gemfile.lock') != ''
+        working-directory: sample/ruby
+        run: bundle install
+
+      - name: Install PHP sample deps
+        if: hashFiles('sample/php/composer.lock') != ''
+        working-directory: sample/php
+        run: composer install --no-interaction --prefer-dist

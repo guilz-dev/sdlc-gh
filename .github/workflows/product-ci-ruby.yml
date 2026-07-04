@@ -1,0 +1,35 @@
+name: Product CI (Ruby)
+
+on:
+  workflow_call:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve project directory
+        id: root
+        shell: bash
+        run: |
+          if [[ -f sample/ruby/Gemfile ]]; then
+            echo "dir=sample/ruby" >> "$GITHUB_OUTPUT"
+          elif [[ -f Gemfile ]]; then
+            echo "dir=." >> "$GITHUB_OUTPUT"
+          else
+            echo "No Ruby project found" >&2
+            exit 1
+          fi
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: ${{ steps.root.outputs.dir }}
+
+      - name: Lint and test
+        working-directory: ${{ steps.root.outputs.dir }}
+        run: |
+          bundle exec rubocop
+          bundle exec rspec

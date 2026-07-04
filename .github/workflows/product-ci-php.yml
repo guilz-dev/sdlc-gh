@@ -1,0 +1,39 @@
+name: Product CI (PHP)
+
+on:
+  workflow_call:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve project directory
+        id: root
+        shell: bash
+        run: |
+          if [[ -f sample/php/composer.json ]]; then
+            echo "dir=sample/php" >> "$GITHUB_OUTPUT"
+          elif [[ -f composer.json ]]; then
+            echo "dir=." >> "$GITHUB_OUTPUT"
+          else
+            echo "No PHP project found" >&2
+            exit 1
+          fi
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          coverage: none
+          tools: composer
+
+      - name: Install dependencies
+        working-directory: ${{ steps.root.outputs.dir }}
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Lint and test
+        working-directory: ${{ steps.root.outputs.dir }}
+        run: |
+          composer lint
+          composer test

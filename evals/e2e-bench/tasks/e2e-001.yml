@@ -1,0 +1,10 @@
+id: e2e-001
+class: docs
+stack: any
+description: Validate README heading acceptance
+acceptance:
+  - Heading spelling corrected
+  - No code files changed
+verification_contains:
+  - README.md::# SDLC-GH
+  - README.md::deterministic guardrails for AI coding agents

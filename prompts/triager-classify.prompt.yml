@@ -1,0 +1,10 @@
+name: triager-classify
+description: Classify issue task class from title and body
+messages:
+  - role: user
+    content: |
+      Given this issue, respond with one task class only: docs, test-fix, refactor, feature-small, dependency-bump, infra, security-sensitive.
+      Issue: {{issue_body}}
+evaluators:
+  - type: similarity
+    expected: docs

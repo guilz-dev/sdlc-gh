@@ -1,0 +1,28 @@
+name: Harness sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_repo:
+        description: "owner/name of product repository (for future matrix sync)"
+        required: false
+  schedule:
+    - cron: "0 8 * * 1"
+
+jobs:
+  drift-report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Generate harness drift manifest
+        run: node scripts/harness-drift-report.mjs
+
+      - name: Sync instructions
+        run: |
+          echo "Copy manifest SHAs to product repos via bootstrap or manual sync." >> "$GITHUB_STEP_SUMMARY"
+          echo "See docs/shared-config.md and docs/adoption.md." >> "$GITHUB_STEP_SUMMARY"

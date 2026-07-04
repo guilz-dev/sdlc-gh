@@ -1,0 +1,102 @@
+name: PR context comment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  pull-requests: write
+  checks: read
+
+jobs:
+  context:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build context
+        id: ctx
+        shell: bash
+        env:
+          LANGFUSE_HOST: ${{ vars.LANGFUSE_HOST }}
+        run: |
+          BASE="origin/${{ github.base_ref }}"
+          LOC=$(git diff --numstat "$BASE"...HEAD | awk '{a+=$1;d+=$2} END {print a+d+0}')
+          FILES=$(git diff --name-only "$BASE"...HEAD | wc -l | tr -d ' ')
+          LABELS="${{ join(github.event.pull_request.labels.*.name, ', ') }}"
+          RETRY=$(echo "$LABELS" | tr ',' '\n' | grep -o 'retry:[0-9]*' | head -1 || true)
+          INS_SHA=$(git log -1 --format=%H -- .github/copilot-instructions.md AGENTS.md 2>/dev/null || echo "n/a")
+          SKILLS_SHA=$(git log -1 --format=%H -- .github/skills 2>/dev/null || echo "n/a")
+          if [[ -f evals/.score-baseline.json ]]; then
+            EVAL_SCORE=$(node -e "const b=require('./evals/.score-baseline.json'); console.log(b.eval_pass_rate+'%')")
+          else
+            EVAL_SCORE="n/a"
+          fi
+          if [[ -n "$LANGFUSE_HOST" ]]; then
+            TRACE="${LANGFUSE_HOST%/} (search: repo=${{ github.repository }}, pr_number=${{ github.event.pull_request.number }})"
+          else
+            TRACE="_configure LANGFUSE_HOST; then search by repo=${{ github.repository }}, pr_number=${{ github.event.pull_request.number }}_"
+          fi
+          THREAT_STATUS="n/a"
+          echo "loc=$LOC" >> "$GITHUB_OUTPUT"
+          echo "files=$FILES" >> "$GITHUB_OUTPUT"
+          echo "labels=$LABELS" >> "$GITHUB_OUTPUT"
+          echo "retry=$RETRY" >> "$GITHUB_OUTPUT"
+          echo "ins_sha=$INS_SHA" >> "$GITHUB_OUTPUT"
+          echo "skills_sha=$SKILLS_SHA" >> "$GITHUB_OUTPUT"
+          echo "eval_score=$EVAL_SCORE" >> "$GITHUB_OUTPUT"
+          echo "trace=$TRACE" >> "$GITHUB_OUTPUT"
+          echo "threat_status=$THREAT_STATUS" >> "$GITHUB_OUTPUT"
+
+      - name: Post comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: checks } = await github.rest.checks.listForRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.payload.pull_request.head.sha,
+            });
+            const failed = checks.check_runs.filter((c) => c.conclusion === 'failure').map((c) => c.name);
+            const ciSummary = failed.length ? `❌ ${failed.join(', ')}` : '✅ no failures (or pending)';
+            const body = `## Harness context (auto)
+
+            | Field | Value |
+            |-------|-------|
+            | Diff LOC | ${{ steps.ctx.outputs.loc }} |
+            | Changed files | ${{ steps.ctx.outputs.files }} |
+            | Labels | ${{ steps.ctx.outputs.labels }} |
+            | Retry | ${{ steps.ctx.outputs.retry }} |
+            | Instructions SHA | \`${{ steps.ctx.outputs.ins_sha }}\` |
+            | Skills SHA | \`${{ steps.ctx.outputs.skills_sha }}\` |
+            | Eval score (baseline) | ${{ steps.ctx.outputs.eval_score }} |
+            | AI credits | _set max-ai-credits in org settings_ |
+            | Trace link | ${{ steps.ctx.outputs.trace }} |
+            | Threat detection | ${{ steps.ctx.outputs.threat_status }} |
+            | CI | ${ciSummary} |
+
+            <!-- harness-pr-context -->
+            `;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find((c) => c.body?.includes('harness-pr-context'));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

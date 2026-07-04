@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "stacks": [
+    {
+      "id": "ts",
+      "label": "TypeScript",
+      "profile": "typescript.instructions.md",
+      "sampleDir": "ts",
+      "marker": "package.json",
+      "sampleMarker": "sample/ts/package.json",
+      "workflow": "product-ci-ts.yml",
+      "bootstrapCheck": "package.json"
+    },
+    {
+      "id": "python",
+      "label": "Python",
+      "profile": "python.instructions.md",
+      "sampleDir": "python",
+      "marker": "requirements-dev.txt",
+      "sampleMarker": "sample/python/requirements-dev.txt",
+      "workflow": "product-ci-python.yml",
+      "bootstrapCheck": "requirements-dev.txt"
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "profile": "go.instructions.md",
+      "sampleDir": "go",
+      "marker": "go.mod",
+      "sampleMarker": "sample/go/go.mod",
+      "workflow": "product-ci-go.yml",
+      "bootstrapCheck": "go.mod"
+    },
+    {
+      "id": "ruby",
+      "label": "Ruby",
+      "profile": "ruby.instructions.md",
+      "sampleDir": "ruby",
+      "marker": "Gemfile",
+      "sampleMarker": "sample/ruby/Gemfile",
+      "workflow": "product-ci-ruby.yml",
+      "bootstrapCheck": "Gemfile"
+    },
+    {
+      "id": "php",
+      "label": "PHP",
+      "profile": "php.instructions.md",
+      "sampleDir": "php",
+      "marker": "composer.json",
+      "sampleMarker": "sample/php/composer.json",
+      "workflow": "product-ci-php.yml",
+      "bootstrapCheck": "composer.json"
+    }
+  ]
+}

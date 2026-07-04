@@ -1,0 +1,5 @@
+# Harness assets — require harness engineer review
+/.github/ @your-org/harness-engineers
+/evals/ @your-org/harness-engineers
+/docs/telemetry-schema.md @your-org/harness-engineers
+/docs/operations.md @your-org/harness-engineers

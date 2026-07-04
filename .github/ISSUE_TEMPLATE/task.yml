@@ -1,0 +1,50 @@
+name: Task
+description: Agent-delegated work item with acceptance criteria
+title: "[task]: "
+body:
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance criteria
+      description: Use concrete, testable conditions. These are copied into the PR review gate.
+      placeholder: |
+        - [ ] Criterion 1
+        - [ ] Criterion 2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: task_class
+    attributes:
+      label: Task class
+      description: Triager or assignee must map this choice to the matching task:* label.
+      options:
+        - docs
+        - test-fix
+        - refactor
+        - feature-small
+        - dependency-bump
+        - infra
+        - security-sensitive
+    validations:
+      required: true
+
+  - type: dropdown
+    id: autonomy
+    attributes:
+      label: Max autonomy level
+      description: Assignee must map this choice to the matching autonomy:* label.
+      options:
+        - L0
+        - L1
+        - L2
+        - L3
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+    validations:
+      required: false

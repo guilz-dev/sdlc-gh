@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "hooks": [
+    {
+      "event": "preToolUse",
+      "matcher": "shell",
+      "pattern": "git push --force|git push -f|rm -rf /|drop database|DROP TABLE",
+      "action": "block",
+      "message": "Destructive operation blocked by harness policy"
+    }
+  ]
+}

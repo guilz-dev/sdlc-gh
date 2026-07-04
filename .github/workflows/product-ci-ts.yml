@@ -1,0 +1,37 @@
+name: Product CI (TypeScript)
+
+on:
+  workflow_call:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve project directory
+        id: root
+        shell: bash
+        run: |
+          if [[ -f sample/ts/package.json ]]; then
+            echo "dir=sample/ts" >> "$GITHUB_OUTPUT"
+          elif [[ -f package.json ]]; then
+            echo "dir=." >> "$GITHUB_OUTPUT"
+          else
+            echo "No TypeScript project found" >&2
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: ${{ steps.root.outputs.dir }}/package-lock.json
+
+      - name: Install, lint, typecheck, test
+        working-directory: ${{ steps.root.outputs.dir }}
+        run: |
+          npm ci
+          npm run lint
+          npm run typecheck
+          npm test

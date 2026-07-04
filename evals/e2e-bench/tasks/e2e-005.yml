@@ -1,0 +1,11 @@
+id: e2e-005
+class: docs
+stack: python
+description: Validate docstring presence on greet() public function
+acceptance:
+  - Docstring present
+  - Tests still pass
+verification_commands:
+  - sample/python::python3 -c "from src.greet import greet; assert greet('world') == 'Hello, world!'"
+verification_contains:
+  - sample/python/src/greet.py::"""Return a friendly greeting for the provided name."""

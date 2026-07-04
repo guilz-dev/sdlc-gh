@@ -1,0 +1,94 @@
+# Operations
+
+Canonical thresholds and policies. All CI gates read from this document.
+
+## Change size limits (arch.md §5.2.2)
+
+| Level | Max LOC | Max files |
+|-------|---------|-----------|
+| L1 | 300 | 8 |
+| L2 | 120 | 4 |
+| L3 | 60 | 2 |
+
+L2/L3 labeled PRs **hard fail** CI when exceeded. L1 default warns until Phase 2 hard-fail rollout.
+
+## Retry policy (Phase 3)
+
+| Parameter | Value |
+|-----------|-------|
+| Max retries `N` | 3 |
+| Same failure signature | Stop after 2 consecutive identical |
+| Cost cap per task | Configure per org (`max-ai-credits`) |
+
+| Failure type | Retry allowed |
+|--------------|---------------|
+| test | yes |
+| lint / type | yes |
+| security | no — escalate immediately |
+| safe-output / diff-size | conditional — request split |
+| same signature ×2 | no |
+
+## Forbidden operations (hooks + CI)
+
+- `git push --force` to protected branches
+- `rm -rf /` and destructive filesystem patterns
+- Production DB / secrets modification without `task:infra` + human approval
+
+## Single gate
+
+- Human judgment: **PR review only**
+- No self-approval where ruleset allows enforcement
+- Harness engineer owns `.github/**`, `evals/**`, `docs/telemetry-schema.md`
+
+## Morning queue (outer loop)
+
+Daily ~30 min checklist:
+
+1. Review nightly harness review PRs (gh-aw)
+2. Triage `harness:eval-drift` issues
+3. Classify failures per [failure-taxonomy.md](failure-taxonomy.md)
+4. Update [kpi-baseline.md](kpi-baseline.md) if metrics available
+
+## KPI baseline (Phase 1)
+
+Track weekly per [kpi-baseline.md](kpi-baseline.md). Schema fields in [telemetry-schema.md](telemetry-schema.md).
+
+## L2 autonomy promotion (Phase 4)
+
+Promote `task:docs` to L2 candidate when **all** hold:
+
+- Last 50 tasks: adoption rate > 90%
+- Zero major reverts in 90 days
+- E2E bench pass@1 stable or improving
+
+Document promotion in PR with evidence links.
+
+## Eval governance
+
+### Rubric updates
+
+Review for: validity, reproducibility, bias before merge.
+
+### Schedule
+
+- PR: subset eval by change type matrix
+- Weekly: full eval suite
+
+### Drift threshold
+
+If eval pass rate exceeds production acceptance rate by **more than 15 points**, open bench review Issue automatically.
+
+## Secrets naming
+
+| Secret | Purpose |
+|--------|---------|
+| `EVAL_JUDGE_API_KEY` | DeepEval / LLM-as-judge |
+| `GITHUB_TOKEN` | gh models eval (default Actions token often sufficient) |
+| `LANGFUSE_PUBLIC_KEY` | Optional telemetry export |
+| `LANGFUSE_SECRET_KEY` | Optional telemetry export |
+
+## PR open limit (safe outputs substitute)
+
+Until gh-aw `safe_outputs.max_prs` is active, CI uses **open PR count per author** as a proxy (Phase 0–2: warn; Phase 3+: gh-aw enforces per workflow run).
+
+Warn when an author has more than **3** open PRs at once (`scripts/check-open-pr-limit.mjs`).

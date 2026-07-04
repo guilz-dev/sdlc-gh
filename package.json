@@ -1,0 +1,18 @@
+{
+  "name": "sdlc-gh",
+  "version": "0.1.0",
+  "description": "GitHub Copilot agent harness template — CI walls, evals, and operations for coding agents",
+  "license": "MIT",
+  "private": false,
+  "type": "module",
+  "scripts": {
+    "validate": "node scripts/validate-harness.mjs",
+    "check": "npm run validate && npm run test-hooks && npm run check-e2e && npm run run-e2e",
+    "check-e2e": "node scripts/check-e2e-manifest.mjs",
+    "test-hooks": "node scripts/test-hooks-scenarios.mjs",
+    "check-open-prs": "node scripts/check-open-pr-limit.mjs",
+    "drift-report": "node scripts/harness-drift-report.mjs",
+    "run-e2e": "node scripts/run-e2e-bench.mjs",
+    "verify-bootstrap": "bash scripts/verify-bootstrap-stacks.sh"
+  }
+}

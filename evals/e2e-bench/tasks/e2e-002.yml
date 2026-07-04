@@ -1,0 +1,11 @@
+id: e2e-002
+class: test-fix
+stack: ts
+description: Validate sample/ts unit-test acceptance
+acceptance:
+  - npm test passes in sample/ts
+verification_commands:
+  - node>=22@sample/ts::npm test
+verification_contains:
+  - sample/ts/src/add.ts::return a + b;
+  - sample/ts/tests/add.test.ts::expect(add(2, 3)).toBe(5);

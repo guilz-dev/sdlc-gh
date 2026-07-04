@@ -1,0 +1,75 @@
+name: Eval drift check
+
+on:
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  e2e-staleness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check E2E manifest freshness
+        id: e2e
+        run: |
+          node scripts/check-e2e-manifest.mjs 2>&1 | tee /tmp/e2e.out || true
+          if grep -q warning /tmp/e2e.out; then echo "stale=true" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Check eval score drift (15pt threshold)
+        id: score
+        run: |
+          set +e
+          set -o pipefail
+          node scripts/check-eval-score-drift.mjs 2>&1 | tee /tmp/score.out
+          SC=$?
+          if [ "$SC" = "2" ]; then echo "drift=true" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Open bench review issue if stale
+        if: steps.e2e.outputs.stale == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = 'E2E bench rotation due (quarterly 20%)';
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'harness:eval-drift',
+            });
+            if (issues.find((i) => i.title === title)) return;
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              labels: ['harness:eval-drift', 'task:infra'],
+              body: 'E2E manifest not rotated in 90 days. Review evals/e2e-bench/manifest.json per docs/operations.md.',
+            });
+
+      - name: Open eval score drift issue
+        if: steps.score.outputs.drift == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = 'Eval/production acceptance gap exceeds 15pt';
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'harness:eval-drift',
+            });
+            if (issues.find((i) => i.title === title)) return;
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              labels: ['harness:eval-drift', 'task:infra'],
+              body: 'Eval pass rate exceeds production acceptance by >15pt. Review evals/.score-baseline.json and e2e bench per docs/operations.md.',
+            });

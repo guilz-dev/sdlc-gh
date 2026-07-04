@@ -1,0 +1,141 @@
+name: Harness CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  harness-static:
+    name: harness-static
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Validate harness assets
+        run: node scripts/validate-harness.mjs
+
+      - name: Install actionlint
+        run: |
+          bash <(curl -s https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install zizmor
+        run: pip install zizmor
+
+      - name: Run zizmor
+        run: zizmor --offline .github/workflows/
+
+      - name: Hooks scenario tests
+        run: node scripts/test-hooks-scenarios.mjs
+
+  open-pr-limit:
+    name: open-pr-limit
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check open PR limit
+        env:
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/check-open-pr-limit.mjs
+
+  diff-size:
+    name: diff-size
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Diff size and autonomy gate
+        env:
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          BASE_SHA: origin/${{ github.base_ref }}
+        run: node scripts/check-diff-size.mjs
+
+  detect-projects:
+    name: detect-projects
+    needs: harness-static
+    runs-on: ubuntu-latest
+    outputs:
+      ts: ${{ steps.detect.outputs.ts }}
+      python: ${{ steps.detect.outputs.python }}
+      go: ${{ steps.detect.outputs.go }}
+      ruby: ${{ steps.detect.outputs.ruby }}
+      php: ${{ steps.detect.outputs.php }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: detect
+        shell: bash
+        run: |
+          if [[ -f sample/ts/package.json || -f package.json ]]; then
+            echo "ts=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ts=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [[ -f sample/python/requirements-dev.txt || -f requirements-dev.txt ]]; then
+            echo "python=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "python=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [[ -f sample/go/go.mod || -f go.mod ]]; then
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [[ -f sample/ruby/Gemfile || -f Gemfile ]]; then
+            echo "ruby=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ruby=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [[ -f sample/php/composer.json || -f composer.json ]]; then
+            echo "php=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "php=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  product-ts:
+    name: product-ci-ts
+    needs: detect-projects
+    if: needs.detect-projects.outputs.ts == 'true'
+    uses: ./.github/workflows/product-ci-ts.yml
+
+  product-python:
+    name: product-ci-python
+    needs: detect-projects
+    if: needs.detect-projects.outputs.python == 'true'
+    uses: ./.github/workflows/product-ci-python.yml
+
+  product-go:
+    name: product-ci-go
+    needs: detect-projects
+    if: needs.detect-projects.outputs.go == 'true'
+    uses: ./.github/workflows/product-ci-go.yml
+
+  product-ruby:
+    name: product-ci-ruby
+    needs: detect-projects
+    if: needs.detect-projects.outputs.ruby == 'true'
+    uses: ./.github/workflows/product-ci-ruby.yml
+
+  product-php:
+    name: product-ci-php
+    needs: detect-projects
+    if: needs.detect-projects.outputs.php == 'true'
+    uses: ./.github/workflows/product-ci-php.yml

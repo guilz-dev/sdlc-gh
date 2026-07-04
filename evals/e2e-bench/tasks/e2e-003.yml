@@ -1,0 +1,10 @@
+id: e2e-003
+class: test-fix
+stack: python
+description: Validate sample/python unit-test acceptance
+acceptance:
+  - pytest passes in sample/python
+verification_commands:
+  - sample/python::python3 -c "from src.greet import greet; assert greet('world') == 'Hello, world!'"
+verification_contains:
+  - sample/python/tests/test_greet.py::assert greet("world") == "Hello, world!"

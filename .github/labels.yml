@@ -1,0 +1,43 @@
+- name: task:docs
+  color: "0E8A16"
+  description: Documentation changes
+
+- name: task:test-fix
+  color: "1D76DB"
+  description: Test repair or addition
+
+- name: task:refactor
+  color: "FBCA04"
+  description: Behavior-preserving refactor
+
+- name: task:feature-small
+  color: "5319E7"
+  description: Small feature addition
+
+- name: task:dependency-bump
+  color: "BFD4F2"
+  description: Dependency update
+
+- name: task:infra
+  color: "D93F0B"
+  description: CI, IaC, permissions
+
+- name: task:security-sensitive
+  color: "B60205"
+  description: Auth, billing, secrets
+
+- name: autonomy:L0
+  color: "EDEDED"
+  description: Proposal only
+
+- name: autonomy:L1
+  color: "C2E0C6"
+  description: Draft PR, human review required
+
+- name: autonomy:L2
+  color: "FEF2C0"
+  description: Auto-merge candidate after walls
+
+- name: autonomy:L3
+  color: "E99695"
+  description: Limited auto-merge (docs etc.)
