@@ -25,7 +25,7 @@ The full architecture and rationale live in [docs/arch.md](docs/arch.md).
 
 ## Quick start
 
-Requirements: a GitHub repository with Actions enabled; Node.js 18+ for basic local checks. Use Node.js 22 for full parity with CI, including all executable E2E verifiers.
+Requirements: a GitHub repository with Actions enabled; Node.js 22+ for the supported local setup flow and CI parity.
 
 **Option A — new repository from template (easiest)**
 
@@ -36,13 +36,13 @@ Click **Use this template** on GitHub, delete the `sample/` stacks you don't nee
 ```bash
 git clone https://github.com/YOUR_ORG/sdlc-gh.git /tmp/sdlc-gh
 
-# stack: ts | python | go | ruby | php
 /tmp/sdlc-gh/scripts/bootstrap-harness.sh \
   --repo /path/to/your-product \
-  --stack python \
-  --mode existing
+  --codeowners-team @your-org/harness-engineers
 
 cd /path/to/your-product
+./scripts/setup-github.sh --github-repo YOUR_ORG/your-product
+./scripts/doctor.mjs --strict
 git add -A && git commit -m "Add agent harness from sdlc-gh"
 ```
 
@@ -50,19 +50,31 @@ git add -A && git commit -m "Add agent harness from sdlc-gh"
 
 ```bash
 /tmp/sdlc-gh/scripts/bootstrap-harness.sh \
-  --repo /path/to/new-product --stack ts --mode new
+  --repo /path/to/new-product \
+  --stack ts \
+  --mode new \
+  --codeowners-team @your-org/harness-engineers
+
+cd /path/to/new-product
+./scripts/setup-github.sh --github-repo YOUR_ORG/new-product
+./scripts/doctor.mjs --strict
 ```
 
 `--mode new` expands the minimal `sample/{stack}/` project into the repository root.
 
 ### After installing (required)
 
-The harness is inert until you complete these steps:
+The harness is active only after GitHub setup and a clean doctor run:
 
-1. **Sync labels** — run the `Sync labels` workflow once. The `task:*` / `autonomy:*` labels drive the diff-size gate
-2. **Protect the branch** — import [.github/ruleset.example.json](.github/ruleset.example.json) under *Settings → Rules*, making `harness-static`, `diff-size`, `issue-spec-check`, and your stack's product CI required checks (`issue-spec-check` always passes for non-L1 PRs; it enforces CC-SD only when the linked Issue has `task:docs` or `task:test-fix` and `autonomy:L1` labels)
-3. **Set CODEOWNERS** — replace `@your-org/harness-engineers` in [.github/CODEOWNERS](.github/CODEOWNERS) with a real team
-4. **Run the local checks** — see "Local checks" below to confirm your environment
+1. **Bootstrap** — run `./scripts/bootstrap-harness.sh` and confirm the detected stack/mode summary
+2. **Configure GitHub** — run `./scripts/setup-github.sh` to sync labels and create/update the `main-protection` ruleset with your stack's `product-ci-*` check. Optionally add `--with-eval-ruleset` after eval CI is stable.
+3. **Verify** — run `./scripts/doctor.mjs --strict` until every required item passes
+
+Manual fallback remains available for restricted environments:
+
+- Apply labels from [.github/labels.yml](.github/labels.yml)
+- Import [.github/ruleset.example.json](.github/ruleset.example.json) under *Settings → Rules*
+- Ensure required checks include `harness-static`, `diff-size`, `issue-spec-check`, and your stack's `product-ci-*`
 
 Detailed steps and rollback guidance: [docs/adoption.md](docs/adoption.md).
 
@@ -129,8 +141,14 @@ Run from the repository root:
 npm run validate          # harness asset consistency
 npm run test-hooks        # hook block/allow scenarios
 npm run test-issue-spec   # CC-SD issue-spec validator scenarios
+npm run test-diff-size    # diff-size / autonomy gate scenarios
+npm run test-e2e-manifest # e2e manifest structural checks
+npm run test-setup-github # ruleset payload builder scenarios
+npm run test-doctor       # doctor local check scenarios
 npm run check-e2e         # e2e bench manifest checks
+npm run run-e2e           # e2e bench executable acceptance checks
 npm run verify-bootstrap  # bootstrap integration test (all stacks)
+npm run check             # full local gate (validate + scenarios + e2e)
 ```
 
 On Node.js versions older than 22, `run-e2e-bench.mjs` may skip verifiers that require the same runtime as CI and report them as skipped rather than failed.
@@ -144,26 +162,47 @@ pytest evals/trajectories -q
 
 ## Phased rollout
 
-Don't enable everything at once. This order is the safe path; details in [docs/adoption.md](docs/adoption.md).
+Don't enable everything at once. Canonical phase definitions (including Phase 0 baseline) are in [docs/arch.md](docs/arch.md) §7. This table is the quick path; details in [docs/adoption.md](docs/adoption.md).
 
 | Phase | Enable | Risk |
 |-------|--------|------|
+| 0 | CI walls, rulesets (`setup-github.sh`), optional Langfuse scaffold | Low |
 | 1 | instructions, agents, hooks, templates | Low |
 | 2 | `harness-ci` + your stack's `product-ci` | Medium |
-| 3 | `eval-ci` + eval-required ruleset | Medium |
+| 3 | `eval-ci` + optional eval ruleset | Medium |
 | 4 | coding agent L1 (`task:docs` / `task:test-fix` only) | Low–Medium |
 
 Getting started with L1 delegation: [docs/coding-agent-l1.md](docs/coding-agent-l1.md).
 
 ## Project status
 
-Functional today: bootstrap, harness/product CI, diff-size and autonomy gates, hooks scenarios, retry orchestrator, PR context comments, executable acceptance-style E2E checks, and eval scaffolding.
+Functional today: bootstrap, harness/product CI, diff-size and autonomy gates, hooks scenarios, retry orchestrator, PR context comments, executable acceptance-style E2E checks (9 tasks), and eval scaffolding.
 
-Known placeholders:
+Known placeholders (aligned with [docs/arch.md](docs/arch.md) implementation status):
 
-- `nightly-harness-review` / `weekly-redteam` (gh-aw workflows) are **Phase 3 stubs** — they document intent and safe-output limits but do not yet compile with `gh aw compile`
-- `run-e2e-bench.mjs` validates executable acceptance checks for task fixtures, but it is not yet a full break-and-fix agent benchmark
-- `gh models eval` steps in Eval CI are non-blocking until GitHub Models is enabled for your organization
+| Area | Status |
+|------|--------|
+| Bootstrap, stack catalog, harness/product CI | **Implemented** |
+| Hooks, diff-size gate, CC-SD issue-spec check | **Implemented** |
+| Custom agents (triager / implementer / reviewer) | **Implemented** |
+| Eval CI with change-type job selection | **Implemented** |
+| Retry orchestrator, PR context comments | **Implemented** |
+| E2E bench (executable acceptance checks) | **Partial** — 9 tasks; not yet break-and-fix agent runner |
+| `gh models eval` in CI | **Scaffolded** — runs when prompts exist; org must enable Models |
+| gh-aw outer loop (`nightly-harness-review`, `weekly-redteam`) | **Stub** — Markdown + lock.yml placeholders; **does not compile** with `gh aw compile`; compileability not guaranteed; deferred to a separate epic due to Public Preview dependency |
+| Langfuse / OTel export | **Scaffolded** — `infra/` + schema; wiring optional |
+
+### Observability placeholders (spec only)
+
+Until Langfuse / OTel is wired, PR context comments use fixed placeholders (workflow logic unchanged):
+
+| Field | When unset / n/a |
+|-------|------------------|
+| Trace link | `_configure LANGFUSE_HOST; then search by repo=…, pr_number=…_` |
+| AI credits | Informational — `_set max-ai-credits in org settings_` |
+| Threat detection | `n/a` — gh-aw outer loop remains stub |
+
+Validate sample payloads: `node scripts/validate-telemetry.mjs "$(cat infra/samples/telemetry-payload.json)"`. See [docs/telemetry-schema.md](docs/telemetry-schema.md).
 
 ## Architecture
 
@@ -210,6 +249,7 @@ flowchart TB
 | [docs/arch.md](docs/arch.md) | Full architecture and design principles |
 | [docs/adoption.md](docs/adoption.md) | Installation and rollback |
 | [docs/operations.md](docs/operations.md) | Thresholds, retry policy, forbidden ops (**canonical** policy) |
+| [docs/revert-playbook.md](docs/revert-playbook.md) | Revert procedure (harness vs product) |
 | [docs/coding-agent-l1.md](docs/coding-agent-l1.md) | Running the first L1 delegations |
 | [docs/failure-taxonomy.md](docs/failure-taxonomy.md) | Classifying failures for outer-loop routing |
 | [docs/kpi-baseline.md](docs/kpi-baseline.md) | Weekly KPI tracking template |

@@ -2,8 +2,10 @@
 set -euo pipefail
 
 REPO=""
-STACK="ts"
-MODE="existing"
+STACK=""
+MODE=""
+CODEOWNERS_TEAM=""
+YES=0
 TEMPLATE_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 stack_field() {
@@ -24,33 +26,191 @@ stack_ids() {
 usage() {
   local ids
   ids="$(stack_ids | tr ' ' '|')"
-  echo "Usage: $0 --repo <path> --stack <${ids}> [--mode new|existing]"
+  cat <<EOF
+Usage: $0 [--repo <path>] [--stack <${ids}>] [--mode new|existing] [--codeowners-team @org/team] [--yes]
+EOF
   exit 1
 }
 
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --repo) REPO="$2"; shift 2 ;;
-    --stack) STACK="$2"; shift 2 ;;
-    --mode) MODE="$2"; shift 2 ;;
-    *) usage ;;
+validate_stack() {
+  node --input-type=module -e "
+    import { getStack } from 'file://${TEMPLATE_ROOT}/scripts/lib/stacks.mjs';
+    getStack(process.argv[1]);
+  " "$1" >/dev/null 2>&1
+}
+
+detect_repo() {
+  if [[ -n "$REPO" ]]; then
+    return
+  fi
+
+  local git_root=""
+  git_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+  if [[ -n "$git_root" ]] && [[ "$(cd "$git_root" && pwd)" != "$TEMPLATE_ROOT" ]]; then
+    REPO="$git_root"
+  else
+    REPO="$PWD"
+  fi
+}
+
+detect_stack_json() {
+  node --input-type=module -e "
+    import { detectStackCandidates } from 'file://${TEMPLATE_ROOT}/scripts/lib/stacks.mjs';
+    console.log(JSON.stringify(detectStackCandidates(process.argv[1])));
+  " "$REPO"
+}
+
+stack_suggested() {
+  node --input-type=module -e "
+    const input = JSON.parse(process.argv[1]);
+    console.log(input.suggested ?? '');
+  " "$1"
+}
+
+stack_candidates() {
+  node --input-type=module -e "
+    const input = JSON.parse(process.argv[1]);
+    const ids = [...new Set([...input.rootMatches, ...input.nestedMatches].map((m) => m.stackId))];
+    console.log(ids.join(' '));
+  " "$1"
+}
+
+stack_summary() {
+  node --input-type=module -e "
+    const input = JSON.parse(process.argv[1]);
+    for (const match of input.rootMatches) console.log(\`root:\${match.stackId}:\${match.path}\`);
+    for (const match of input.nestedMatches) console.log(\`nested:\${match.stackId}:\${match.path}\`);
+  " "$1"
+}
+
+prompt_stack() {
+  local detected_json suggested candidates answer
+  detected_json="$(detect_stack_json)"
+  suggested="$(stack_suggested "$detected_json")"
+  candidates="$(stack_candidates "$detected_json")"
+
+  if [[ -n "$suggested" ]]; then
+    STACK="$suggested"
+    echo "Detected stack: $STACK"
+    return
+  fi
+
+  if [[ -n "$candidates" ]]; then
+    echo "Detected stack candidates:"
+    stack_summary "$detected_json"
+    if [[ "$YES" -eq 1 ]]; then
+      echo "Unable to infer a single stack. Re-run with --stack." >&2
+      exit 1
+    fi
+    read -r -p "Choose stack [${candidates// /, }]: " answer
+  else
+    if [[ "$YES" -eq 1 ]]; then
+      echo "Unable to detect a stack. Re-run with --stack." >&2
+      exit 1
+    fi
+    read -r -p "Stack not detected. Choose stack [$(stack_ids | tr ' ' ', ')]: " answer
+  fi
+
+  if ! validate_stack "$answer"; then
+    echo "Unknown stack: $answer" >&2
+    exit 1
+  fi
+  STACK="$answer"
+}
+
+detect_mode_json() {
+  node --input-type=module -e "
+    import { inspectRepoMode } from 'file://${TEMPLATE_ROOT}/scripts/lib/stacks.mjs';
+    console.log(JSON.stringify(inspectRepoMode(process.argv[1])));
+  " "$REPO"
+}
+
+mode_field() {
+  node --input-type=module -e "
+    const input = JSON.parse(process.argv[1]);
+    console.log(input[process.argv[2]] ?? '');
+  " "$1" "$2"
+}
+
+prompt_mode() {
+  local detected_json suggested ambiguous reason answer
+  detected_json="$(detect_mode_json)"
+  suggested="$(mode_field "$detected_json" suggested)"
+  ambiguous="$(mode_field "$detected_json" ambiguous)"
+  reason="$(mode_field "$detected_json" reason)"
+
+  if [[ -n "$suggested" ]] && [[ "$ambiguous" != "true" ]]; then
+    MODE="$suggested"
+    echo "Detected mode: $MODE ($reason)"
+    return
+  fi
+
+  if [[ "$YES" -eq 1 ]]; then
+    echo "Unable to infer mode safely ($reason). Re-run with --mode." >&2
+    exit 1
+  fi
+
+  echo "Mode requires confirmation: $reason"
+  read -r -p "Choose mode [new/existing]: " answer
+  case "$answer" in
+    new|existing) MODE="$answer" ;;
+    *) echo "Unknown mode: $answer" >&2; exit 1 ;;
   esac
-done
+}
 
-[[ -z "$REPO" ]] && usage
-[[ ! -d "$REPO" ]] && mkdir -p "$REPO"
+prompt_codeowners_team() {
+  local answer
+  if [[ -n "$CODEOWNERS_TEAM" ]]; then
+    return
+  fi
 
-if ! node --input-type=module -e "
-  import { getStack } from 'file://${TEMPLATE_ROOT}/scripts/lib/stacks.mjs';
-  getStack('${STACK}');
-" 2>/dev/null; then
-  echo "Unknown stack: $STACK" >&2
-  usage
-fi
+  if [[ "$YES" -eq 1 ]]; then
+    echo "--codeowners-team is required with --yes." >&2
+    exit 1
+  fi
 
-PROFILE="$(stack_field profile)"
-PRODUCT_CI="$(stack_field workflow)"
-SAMPLE_DIR="$(stack_field sampleDir)"
+  read -r -p "CODEOWNERS team [@org/team]: " answer
+  if [[ ! "$answer" =~ ^@[^/]+/[^/]+$ ]]; then
+    echo "Expected @org/team format." >&2
+    exit 1
+  fi
+  CODEOWNERS_TEAM="$answer"
+}
+
+confirm_summary() {
+  [[ "$YES" -eq 1 ]] && return
+
+  local profile product_ci sample_dir
+  profile="$(stack_field profile)"
+  product_ci="$(stack_field workflow)"
+  sample_dir="$(stack_field sampleDir)"
+
+  cat <<EOF
+Bootstrap summary
+  repo: $REPO
+  stack: $STACK
+  mode: $MODE
+  CODEOWNERS team: $CODEOWNERS_TEAM
+  profile: $profile
+  workflow: $product_ci
+  sample copy: $([[ "$MODE" == "new" ]] && echo "sample/$sample_dir -> repo root" || echo "disabled")
+EOF
+  read -r -p "Proceed? [y/N]: " answer
+  case "$answer" in
+    y|Y|yes|YES) ;;
+    *) echo "Cancelled."; exit 1 ;;
+  esac
+}
+
+replace_codeowners_placeholder() {
+  node --input-type=module -e "
+    import { readFileSync, writeFileSync } from 'node:fs';
+    const path = process.argv[1];
+    const team = process.argv[2];
+    const current = readFileSync(path, 'utf8');
+    writeFileSync(path, current.replaceAll('@your-org/harness-engineers', team));
+  " "$1" "$CODEOWNERS_TEAM"
+}
 
 copy_tree() {
   local src="$1" dst="$2"
@@ -78,12 +238,47 @@ copy_tree() {
   fi
 }
 
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --repo) REPO="$2"; shift 2 ;;
+    --stack) STACK="$2"; shift 2 ;;
+    --mode) MODE="$2"; shift 2 ;;
+    --codeowners-team) CODEOWNERS_TEAM="$2"; shift 2 ;;
+    --yes) YES=1; shift ;;
+    *) usage ;;
+  esac
+done
+
+detect_repo
+
+if [[ -n "$STACK" ]] && ! validate_stack "$STACK"; then
+  echo "Unknown stack: $STACK" >&2
+  usage
+fi
+
+[[ -n "$STACK" ]] || prompt_stack
+
+case "$MODE" in
+  "" ) prompt_mode ;;
+  new|existing) ;;
+  * ) echo "Unknown mode: $MODE" >&2; usage ;;
+esac
+
+prompt_codeowners_team
+confirm_summary
+
+[[ ! -d "$REPO" ]] && mkdir -p "$REPO"
+
+PROFILE="$(stack_field profile)"
+PRODUCT_CI="$(stack_field workflow)"
+SAMPLE_DIR="$(stack_field sampleDir)"
+
 echo "Bootstrapping harness into $REPO (stack=$STACK, mode=$MODE)"
 
 # Core docs
 mkdir -p "$REPO/docs" "$REPO/docs/exceptions"
 for f in operations.md adoption.md auth-boundaries.md failure-taxonomy.md telemetry-schema.md \
-  shared-config.md coding-agent-l1.md kpi-baseline.md; do
+  shared-config.md coding-agent-l1.md kpi-baseline.md revert-playbook.md; do
   cp "$TEMPLATE_ROOT/docs/$f" "$REPO/docs/" 2>/dev/null || true
 done
 cp "$TEMPLATE_ROOT/docs/exceptions/README.md" "$REPO/docs/exceptions/" 2>/dev/null || true
@@ -104,6 +299,7 @@ cp "$TEMPLATE_ROOT/.github/copilot-instructions.md" "$REPO/.github/"
 cp "$TEMPLATE_ROOT/.github/labels.yml" "$REPO/.github/"
 cp "$TEMPLATE_ROOT/.github/pull_request_template.md" "$REPO/.github/"
 cp "$TEMPLATE_ROOT/.github/CODEOWNERS" "$REPO/.github/"
+replace_codeowners_placeholder "$REPO/.github/CODEOWNERS"
 cp "$TEMPLATE_ROOT/.github/ruleset.example.json" "$REPO/.github/" 2>/dev/null || true
 
 mkdir -p "$REPO/.github/instructions/profiles"
@@ -127,16 +323,21 @@ cp "$TEMPLATE_ROOT/.github/ruleset.harness-eval.example.json" "$REPO/.github/" 2
 mkdir -p "$REPO/scripts/lib"
 for s in validate-harness.mjs check-diff-size.mjs check-issue-spec.mjs select-eval-jobs.mjs \
   check-e2e-manifest.mjs validate-telemetry.mjs check-open-pr-limit.mjs \
-  test-hooks-scenarios.mjs test-issue-spec-scenarios.mjs harness-drift-report.mjs \
-  check-eval-score-drift.mjs run-e2e-bench.mjs; do
+  test-hooks-scenarios.mjs test-issue-spec-scenarios.mjs test-diff-size-scenarios.mjs \
+  test-e2e-manifest-scenarios.mjs test-setup-github-scenarios.mjs test-doctor-scenarios.mjs \
+  harness-drift-report.mjs check-eval-score-drift.mjs run-e2e-bench.mjs doctor.mjs setup-github.mjs; do
   cp "$TEMPLATE_ROOT/scripts/$s" "$REPO/scripts/" 2>/dev/null || true
 done
-cp "$TEMPLATE_ROOT/scripts/lib/stacks.mjs" "$REPO/scripts/lib/" 2>/dev/null || true
-cp "$TEMPLATE_ROOT/scripts/lib/harness-ci-fragments.mjs" "$REPO/scripts/lib/" 2>/dev/null || true
-cp "$TEMPLATE_ROOT/scripts/lib/ccsd-contract.mjs" "$REPO/scripts/lib/" 2>/dev/null || true
+for s in bootstrap-harness.sh setup-github.sh verify-bootstrap-stacks.sh; do
+  cp "$TEMPLATE_ROOT/scripts/$s" "$REPO/scripts/" 2>/dev/null || true
+done
+for s in stacks.mjs harness-ci-fragments.mjs ccsd-contract.mjs github-config.mjs \
+  diff-size.mjs e2e-manifest.mjs doctor-local.mjs bootstrap-copy.mjs; do
+  cp "$TEMPLATE_ROOT/scripts/lib/$s" "$REPO/scripts/lib/" 2>/dev/null || true
+done
 cp "$TEMPLATE_ROOT/scripts/trim-harness-ci.mjs" "$REPO/scripts/" 2>/dev/null || true
-cp "$TEMPLATE_ROOT/scripts/verify-bootstrap-stacks.sh" "$REPO/scripts/" 2>/dev/null || true
-chmod +x "$REPO/scripts/"*.mjs "$REPO/scripts/verify-bootstrap-stacks.sh" 2>/dev/null || true
+cp "$TEMPLATE_ROOT/package.json" "$REPO/package.json" 2>/dev/null || true
+chmod +x "$REPO/scripts/"*.mjs "$REPO/scripts/"*.sh 2>/dev/null || true
 
 # Sample for new projects
 if [[ "$MODE" == "new" ]]; then
@@ -158,10 +359,11 @@ cp "$TEMPLATE_ROOT/prompts/"*.prompt.yml "$REPO/prompts/" 2>/dev/null || true
 echo "$STACK" > "$REPO/.harness-stack"
 
 # Infra optional copy
-mkdir -p "$REPO/infra/langfuse" "$REPO/infra/otel"
+mkdir -p "$REPO/infra/langfuse" "$REPO/infra/otel" "$REPO/infra/samples"
 cp "$TEMPLATE_ROOT/infra/langfuse/docker-compose.yml" "$REPO/infra/langfuse/" 2>/dev/null || true
 cp "$TEMPLATE_ROOT/infra/otel/collector-config.yml" "$REPO/infra/otel/" 2>/dev/null || true
 cp "$TEMPLATE_ROOT/infra/README.md" "$REPO/infra/" 2>/dev/null || true
+cp "$TEMPLATE_ROOT/infra/samples/telemetry-payload.json" "$REPO/infra/samples/" 2>/dev/null || true
 
 echo "Done. Stack=$STACK mode=$MODE"
-echo "Next: enable ruleset (.github/ruleset.example.json), run labels-sync workflow, configure CODEOWNERS."
+echo "Next: ./scripts/setup-github.sh --yes && ./scripts/doctor.mjs --strict"

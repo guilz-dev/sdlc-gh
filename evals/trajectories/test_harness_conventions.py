@@ -56,7 +56,7 @@ def test_pr_template_has_harness_context_and_rollback():
 
 def test_change_size_limits_align_between_docs_and_gate():
     operations = read("docs/operations.md")
-    gate = read("scripts/check-diff-size.mjs")
+    gate = read("scripts/lib/diff-size.mjs")
     agents = read("AGENTS.md")
     copilot = read(".github/copilot-instructions.md")
 

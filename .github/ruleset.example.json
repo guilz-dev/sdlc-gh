@@ -29,5 +29,5 @@
       }
     }
   ],
-  "_comment": "Add product-ci-{stack} check matching your .harness-stack after bootstrap. issue-spec-check is always safe as required: it skips non-L1 PRs and enforces CC-SD only for linked Issues labeled task:docs|test-fix + autonomy:L1."
+  "_comment": "Canonical template for scripts/setup-github.sh. The setup script injects product-ci-{stack} from .harness-stack and keeps issue-spec-check required for all repos."
 }

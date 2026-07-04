@@ -1,27 +1,35 @@
 #!/usr/bin/env node
-/** Verify e2e-bench manifest freshness (Phase 4: 20% quarterly rotation) */
-import { readFileSync, existsSync } from "node:fs";
+/** Verify e2e-bench manifest freshness and structural integrity */
+import { readdirSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { validateManifest } from "./lib/e2e-manifest.mjs";
 
 const manifestPath = join(process.cwd(), "evals/e2e-bench/manifest.json");
+const tasksDir = join(process.cwd(), "evals/e2e-bench/tasks");
+
 if (!existsSync(manifestPath)) {
   console.error("Missing evals/e2e-bench/manifest.json");
   process.exit(1);
 }
 
 const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-const tasks = manifest.tasks || [];
-const minTasks = manifest.min_tasks || 5;
-const lastRotated = new Date(manifest.last_rotated || 0);
-const quarterMs = 90 * 24 * 60 * 60 * 1000;
+const taskFileIds = existsSync(tasksDir)
+  ? readdirSync(tasksDir)
+      .filter((name) => name.endsWith(".yml"))
+      .map((name) => name.replace(/\.yml$/, ""))
+  : [];
 
-console.log(`E2E tasks: ${tasks.length} (min ${minTasks})`);
+const { errors, warnings, taskCount, minTasks } = validateManifest(manifest, taskFileIds);
 
-if (tasks.length < minTasks) {
-  console.error(`::error::Need at least ${minTasks} e2e tasks`);
-  process.exit(1);
+console.log(`E2E tasks: ${taskCount} (min ${minTasks})`);
+
+for (const warning of warnings) {
+  console.warn(`::warning::${warning}`);
 }
 
-if (Date.now() - lastRotated.getTime() > quarterMs) {
-  console.warn("::warning::E2E bench not rotated in 90 days — review manifest");
+if (errors.length > 0) {
+  for (const error of errors) {
+    console.error(`::error::${error}`);
+  }
+  process.exit(1);
 }

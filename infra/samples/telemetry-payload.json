@@ -1,0 +1,19 @@
+{
+  "task_id": "42",
+  "pr_number": 101,
+  "repo": "org/product",
+  "agent_type": "implementer",
+  "execution_mode": "coding_agent",
+  "model": "gpt-4.1",
+  "task_class": "docs",
+  "autonomy_level": "L1",
+  "tool_calls": 12,
+  "retry_count": 0,
+  "wall_failure_type": "",
+  "cost": 0.42,
+  "elapsed_time": 95,
+  "changed_files": 2,
+  "diff_loc": 48,
+  "final_outcome": "in_progress",
+  "review_outcome": "pending"
+}

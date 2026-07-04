@@ -15,13 +15,38 @@ Apply this harness template to any repository.
 
 ```bash
 git clone <harness-template-url> /tmp/harness
-/tmp/harness/scripts/bootstrap-harness.sh --repo /path/to/new-product --stack ts --mode new
-cd /path/to/new-product && git add -A && git commit -m "Add agent harness"
+/tmp/harness/scripts/bootstrap-harness.sh \
+  --repo /path/to/new-product \
+  --stack ts \
+  --mode new \
+  --codeowners-team @your-org/harness-engineers
+cd /path/to/new-product
+./scripts/setup-github.sh --github-repo YOUR_ORG/new-product
+./scripts/doctor.mjs --strict
+git add -A && git commit -m "Add agent harness"
 ```
 
-3. Enable branch protection / ruleset (see `.github/ruleset.example.json`).
-4. Run **Sync labels** workflow once (or push to `labels.yml`) to apply `task:*` and `autonomy:*` labels.
-5. Configure CODEOWNERS with your team handles.
+3. Run `./scripts/setup-github.sh` to sync labels and create/update the `main-protection` ruleset.
+4. *(Optional, Phase 3)* After eval CI is green in your org, run `./scripts/setup-github.sh --with-eval-ruleset` to create/update the `harness-pr-eval-required` ruleset. The template ruleset applies to all PRs targeting `main`; narrow conditions in GitHub Settings if you only want harness-asset PRs blocked. GitHub Models enablement is still required before `prompt-eval` can block merges.
+5. Run `./scripts/doctor.mjs --strict` and fix any remaining failures.
+6. Manual fallback: import `.github/ruleset.example.json` and apply `.github/labels.yml` if `gh` cannot be used.
+
+## GitHub setup order
+
+Apply in this order (see `scripts/setup-github.sh`):
+
+1. **Labels sync** — `task:*` and `autonomy:*` from `.github/labels.yml`
+2. **Main protection** — `main-protection` ruleset with harness + product CI checks
+3. **Optional eval ruleset** — `--with-eval-ruleset` adds `harness-pr-eval-required` (eval CI checks only; does not enable GitHub Models). This ruleset targets `main` and requires `select` + `trajectory-conventions` on **all** PRs to that branch — enable only when your org accepts that cost, or narrow the ruleset conditions in GitHub Settings after creation.
+
+## Behavior / spec corrections (template updates)
+
+When pulling harness updates, review these intentional behavior alignments with [arch.md](arch.md):
+
+| Area | Current spec | Legacy behavior |
+|------|--------------|-----------------|
+| `autonomy:L0` diff-size | Proposal only — no LOC/file gate | Some versions applied L1 limits with warn |
+| L1 over-limit | Warn by default; opt-in hard-fail via `DIFF_SIZE_L1_HARD_FAIL=1` | — |
 
 ## Existing repository (phased)
 
@@ -32,8 +57,15 @@ cd /path/to/new-product && git add -A && git commit -m "Add agent harness"
 | 3 | Eval CI + ruleset eval required | Medium |
 | 4 | Coding agent L1 on `task:docs` / `task:test-fix` (CC-SD contract required) | Low tasks first |
 
+gh-aw outer loop (`nightly-harness-review`, `weekly-redteam`) remains **stub** — do not enable until a separate epic validates `gh aw compile`. See [arch.md](arch.md) implementation status.
+
 ```bash
-./scripts/bootstrap-harness.sh --repo /path/to/existing --stack python --mode existing
+./scripts/bootstrap-harness.sh \
+  --repo /path/to/existing \
+  --codeowners-team @your-org/harness-engineers
+cd /path/to/existing
+./scripts/setup-github.sh --github-repo YOUR_ORG/existing
+./scripts/doctor.mjs --strict
 ```
 
 ## Stack selection
@@ -46,7 +78,7 @@ cd /path/to/new-product && git add -A && git commit -m "Add agent harness"
 | `ruby` | `ruby.instructions.md` | `sample/ruby/` | `product-ci-ruby.yml` |
 | `php` | `php.instructions.md` | `sample/php/` | `product-ci-php.yml` |
 
-Stack metadata is centralized in [`config/stacks.json`](../config/stacks.json). Bootstrap copies **only** the selected stack's profile and `product-ci-*` workflow.
+Stack metadata is centralized in [`config/stacks.json`](../config/stacks.json). Bootstrap copies **only** the selected stack's profile and `product-ci-*` workflow, and replaces the `CODEOWNERS` team placeholder at install time.
 
 ## CC-SD contract (L1 only in v1)
 
@@ -61,6 +93,8 @@ Required Issue fields: `Goal`, `Non-goals`, `Constraints`, `Acceptance criteria`
 Use `harness-sync.yml` or subtree merge to pull harness updates. Review drift report before merge.
 
 ## Rollback
+
+See [revert-playbook.md](revert-playbook.md) for the canonical procedure. Quick steps:
 
 1. Revert the bootstrap commit or sync PR.
 2. Disable required status checks for `harness-ci` in ruleset.

@@ -30,9 +30,9 @@ Three design conclusions:
 | Custom agents (triager / implementer / reviewer) | **Implemented** |
 | Eval CI with change-type job selection | **Implemented** |
 | Retry orchestrator, PR context comments | **Implemented** |
-| E2E bench (executable acceptance checks) | **Partial** — 7 tasks; not yet break-and-fix agent runner |
+| E2E bench (executable acceptance checks) | **Partial** — 9 tasks; not yet break-and-fix agent runner |
 | `gh models eval` in CI | **Scaffolded** — runs when prompts exist; org must enable Models |
-| gh-aw outer loop (`nightly-harness-review`, `weekly-redteam`) | **Stub** — Markdown + lock.yml placeholders |
+| gh-aw outer loop (`nightly-harness-review`, `weekly-redteam`) | **Stub** — Markdown + lock.yml placeholders; does not compile with `gh aw compile`; deferred epic |
 | Langfuse / OTel export | **Scaffolded** — `infra/` + schema; wiring optional |
 
 Operational details and thresholds live in companion docs — see [Documentation index](#11-related-documentation).
@@ -122,6 +122,17 @@ The **inner loop** runs fast (seconds–minutes). The **outer loop** runs slower
 | **G2** Rubrics | "Good PR" definition is domain-specific | `evals/trajectories/rubric.md` + convention tests |
 | **G3** Revision-cycle operations | Trace → classify → revise routing | Documented in [failure-taxonomy.md](failure-taxonomy.md); gh-aw stubs for automation |
 
+#### G1 runner boundary (current vs planned)
+
+| Concern | Current (`run-e2e-bench.mjs`) | Planned break-and-fix runner |
+|---------|-------------------------------|------------------------------|
+| **Task input** | Static YAML fixture in `tasks/*.yml` | Issue + CC-SD contract + repo snapshot |
+| **Expected artifact** | File content / command exit code | Agent-produced PR diff |
+| **Verifier contract** | `verification_*` fields in task YAML | Same fields + agent execution harness |
+| **Result summary** | Per-task ok/fail; class/stack counts; executed/skipped totals | Above + pass@1, retry count, wall failure class |
+
+Manifest validation: `scripts/check-e2e-manifest.mjs`. Details: [evals/e2e-bench/README.md](../evals/e2e-bench/README.md).
+
 ---
 
 ## 4. UX design
@@ -167,7 +178,7 @@ Enforced by Issue labels (`task:*`, `autonomy:*`) and `scripts/check-diff-size.m
 | `infra` | CI, IaC, deploy | L0 | Human gate |
 | `security-sensitive` | Auth, billing, secrets | L0 | Proposal only |
 
-L2/L3 labeled PRs **hard-fail** CI when limits exceeded. L1 warns until hard-fail rollout.
+L2/L3 labeled PRs **hard-fail** CI when limits exceeded. L1 **warns by default** (template). Phase 4 supports opt-in L1 hard-fail via `DIFF_SIZE_L1_HARD_FAIL=1`. `autonomy:L0` is proposal-only (no size gate).
 
 ### 4.5 CC-SD contract (L1 docs / test-fix)
 
@@ -277,7 +288,7 @@ Canonical values in [operations.md](operations.md). Enforced by `scripts/check-d
 | Level | Max LOC | Max files | CI behavior |
 |-------|---------|-----------|-------------|
 | L0 | — | — | Proposal only |
-| L1 | 300 | 8 | Warn (hard-fail planned) |
+| L1 | 300 | 8 | Warn (hard-fail opt-in via `DIFF_SIZE_L1_HARD_FAIL=1`) |
 | L2 | 120 | 4 | Hard fail |
 | L3 | 60 | 2 | Hard fail |
 
@@ -422,6 +433,9 @@ Harness assets live in the product repo so Git history, PR review, and rollback 
 ```bash
 npm run validate          # Harness asset consistency
 npm run test-hooks        # Hook block/allow scenarios
+npm run test-diff-size    # Diff-size scenarios
+npm run test-e2e-manifest # E2E manifest scenarios
+npm run test-doctor       # Doctor local check scenarios
 npm run check-e2e         # E2E manifest checks
 npm run verify-bootstrap  # Bootstrap integration (all stacks)
 pytest evals/trajectories -q
@@ -439,9 +453,9 @@ Do not enable everything at once. Each phase uses prior metrics as promotion evi
 |-------|----------|--------|---------------|
 | **0** | ~2 weeks | CI walls, rulesets, optional Langfuse | harness-ci + product-ci |
 | **1** | ~1 month | Instructions, agents, hooks, templates; record baseline KPIs | FF assets + labels sync |
-| **2** | ~2 months | Eval CI + change-type matrix; E2E bench v1 | eval-ci, 7 e2e tasks |
-| **3** | ~3 months | Retry orchestrator, PR context, gh-aw outer loop | orchestrator + stubs |
-| **4** | Stable ops | L2 promotion for docs; exception ledger; revert playbook | See operations.md |
+| **2** | ~2 months | Eval CI + change-type matrix; E2E bench v1 | eval-ci, 9 e2e tasks |
+| **3** | ~3 months | Retry orchestrator, PR context, gh-aw outer loop stubs | orchestrator + stubs (compile not guaranteed) |
+| **4** | Stable ops | L2 promotion for docs; exception ledger; revert playbook | See [revert-playbook.md](revert-playbook.md), [exceptions/](exceptions/README.md) |
 
 Detailed adoption steps: [adoption.md](adoption.md). L1 trial guide: [coding-agent-l1.md](coding-agent-l1.md).
 
@@ -504,6 +518,7 @@ Tracking template: [kpi-baseline.md](kpi-baseline.md).
 | [shared-config.md](shared-config.md) | Cross-repo harness distribution |
 | [kpi-baseline.md](kpi-baseline.md) | Weekly KPI template |
 | [exceptions/README.md](exceptions/README.md) | Policy exception records |
+| [revert-playbook.md](revert-playbook.md) | Revert procedure |
 | [infra/README.md](../infra/README.md) | Langfuse / OTel self-host |
 
 ---

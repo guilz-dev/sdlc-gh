@@ -44,6 +44,18 @@ jobs:
       - name: Issue-spec scenario tests
         run: node scripts/test-issue-spec-scenarios.mjs
 
+      - name: Diff-size scenario tests
+        run: node scripts/test-diff-size-scenarios.mjs
+
+      - name: E2E manifest scenario tests
+        run: node scripts/test-e2e-manifest-scenarios.mjs
+
+      - name: GitHub setup scenario tests
+        run: node scripts/test-setup-github-scenarios.mjs
+
+      - name: Doctor scenario tests
+        run: node scripts/test-doctor-scenarios.mjs
+
   issue-spec-check:
     name: issue-spec-check
     runs-on: ubuntu-latest
@@ -92,6 +104,8 @@ jobs:
         env:
           PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
           BASE_SHA: origin/${{ github.base_ref }}
+          # Template default: warn-only for L1. Opt in to hard-fail when ready (Phase 4):
+          # DIFF_SIZE_L1_HARD_FAIL: "1"
         run: node scripts/check-diff-size.mjs
 
   detect-projects:

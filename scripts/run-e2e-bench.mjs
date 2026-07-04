@@ -132,6 +132,8 @@ const tasks = manifest.tasks || [];
 let failed = 0;
 let executedChecks = 0;
 let skippedChecks = 0;
+const classCounts = {};
+const stackCounts = {};
 
 for (const entry of tasks) {
   const id = entry.id;
@@ -162,6 +164,10 @@ for (const entry of tasks) {
     if (entry.stack && task.stack !== entry.stack) {
       throw new Error(`${id}.yml stack does not match manifest`);
     }
+
+    classCounts[task.class] = (classCounts[task.class] || 0) + 1;
+    const stackKey = task.stack || entry.stack || "any";
+    stackCounts[stackKey] = (stackCounts[stackKey] || 0) + 1;
 
     const counters = { executed: 0, skipped: 0 };
     for (const spec of task.verification_commands || []) {
@@ -194,6 +200,17 @@ if (failed > 0) {
   process.exit(1);
 }
 
+const classSummary = Object.entries(classCounts)
+  .sort(([a], [b]) => a.localeCompare(b))
+  .map(([name, count]) => `${name}=${count}`)
+  .join(", ");
+const stackSummary = Object.entries(stackCounts)
+  .sort(([a], [b]) => a.localeCompare(b))
+  .map(([name, count]) => `${name}=${count}`)
+  .join(", ");
+
+console.log(`E2E by class: ${classSummary || "none"}`);
+console.log(`E2E by stack: ${stackSummary || "none"}`);
 console.log(
-  `E2E bench: ${tasks.length} task(s), ${executedChecks} executed check(s), ${skippedChecks} skipped`,
+  `E2E bench: ${tasks.length} task(s), ${executedChecks} executed, ${skippedChecks} skipped`,
 );

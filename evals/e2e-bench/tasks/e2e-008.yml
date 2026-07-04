@@ -1,0 +1,10 @@
+id: e2e-008
+class: test-fix
+stack: any
+description: Validate CC-SD contract module defines v1 enforced task classes
+acceptance:
+  - CCSD_ENFORCED_TASK_CLASSES exports docs and test-fix only
+verification_contains:
+  - scripts/lib/ccsd-contract.mjs::export const CCSD_ENFORCED_TASK_CLASSES
+  - scripts/lib/ccsd-contract.mjs::"docs"
+  - scripts/lib/ccsd-contract.mjs::"test-fix"

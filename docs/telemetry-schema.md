@@ -36,4 +36,20 @@ Minimum structured fields for agent harness observability (arch.md §5.4). Expor
 
 ## Validation
 
+```bash
+node scripts/validate-telemetry.mjs "$(cat infra/samples/telemetry-payload.json)"
+```
+
 Collector or `scripts/validate-telemetry.mjs` should reject spans missing required fields when `HARNESS_STRICT_TELEMETRY=1`.
+
+## PR context comment placeholders
+
+When observability is not fully wired:
+
+| Field | Behavior |
+|-------|----------|
+| Trace link | If `LANGFUSE_HOST` is unset, PR comment shows `_configure LANGFUSE_HOST; then search by repo=…, pr_number=…_` |
+| AI credits | Informational only — `_set max-ai-credits in org settings_` until org policy is configured |
+| Threat detection | `n/a` — gh-aw threat detection not active in this template |
+
+Workflow display logic in `pr-context-comment.yml` is unchanged; this section documents the spec only.

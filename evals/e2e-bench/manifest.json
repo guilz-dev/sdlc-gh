@@ -9,6 +9,8 @@
     { "id": "e2e-004", "class": "refactor", "description": "Validate Go API rename without behavior change", "stack": "go" },
     { "id": "e2e-005", "class": "docs", "description": "Validate docstring presence on public API", "stack": "python" },
     { "id": "e2e-006", "class": "test-fix", "description": "Validate sample/ruby unit-test acceptance", "stack": "ruby" },
-    { "id": "e2e-007", "class": "test-fix", "description": "Validate sample/php unit-test acceptance", "stack": "php" }
+    { "id": "e2e-007", "class": "test-fix", "description": "Validate sample/php unit-test acceptance", "stack": "php" },
+    { "id": "e2e-008", "class": "test-fix", "description": "Validate CC-SD contract module defines v1 enforced task classes", "stack": "any" },
+    { "id": "e2e-009", "class": "test-fix", "description": "Validate diff-size autonomy limits match operations policy", "stack": "any" }
   ]
 }

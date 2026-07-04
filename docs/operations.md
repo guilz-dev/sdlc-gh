@@ -10,7 +10,16 @@ Canonical thresholds and policies. All CI gates read from this document.
 | L2 | 120 | 4 |
 | L3 | 60 | 2 |
 
-L2/L3 labeled PRs **hard fail** CI when exceeded. L1 default warns until Phase 2 hard-fail rollout.
+L2/L3 labeled PRs **hard fail** CI when exceeded. L1 **warns by default** (template default). Phase 4 allows opt-in L1 hard-fail via `DIFF_SIZE_L1_HARD_FAIL=1` in the `diff-size` CI job when your org is ready to enforce.
+
+To enable L1 hard-fail, uncomment or add in `.github/workflows/harness-ci.yml` under the `diff-size` job:
+
+```yaml
+env:
+  DIFF_SIZE_L1_HARD_FAIL: "1"
+```
+
+`autonomy:L0` is **proposal-only** — no LOC/file limits are enforced (human gate). This matches arch.md §5.2.2; older harness versions treated L0 as L1 limits with warn-only.
 
 ## Retry policy (Phase 3)
 
@@ -62,6 +71,11 @@ Promote `task:docs` to L2 candidate when **all** hold:
 - E2E bench pass@1 stable or improving
 
 Document promotion in PR with evidence links.
+
+## Revert and exceptions (Phase 4)
+
+- Revert procedure: [revert-playbook.md](revert-playbook.md)
+- Policy exceptions: [exceptions/README.md](exceptions/README.md) — approver, expiry, revert plan, and principle deviated are required
 
 ## Eval governance
 

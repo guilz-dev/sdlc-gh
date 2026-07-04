@@ -6,6 +6,11 @@ import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join, relative } from "node:path";
 import { loadStacks } from "./lib/stacks.mjs";
 import { patchHarnessCi, stacksForHarness } from "./lib/harness-ci-fragments.mjs";
+import {
+  BOOTSTRAP_LIB_FILES,
+  BOOTSTRAP_SCRIPT_MJS,
+  SCRIPT_LIB_IMPORTS,
+} from "./lib/bootstrap-copy.mjs";
 
 const ROOT = process.cwd();
 let errors = 0;
@@ -118,6 +123,39 @@ if (existsSync(catalogPath) && existsSync(harnessCiPath)) {
   }
 } else {
   warn("config/stacks.json or harness-ci.yml not found — skipping stack catalog checks");
+}
+
+// script -> lib import resolution (bootstrap copy drift guard)
+for (const [script, libs] of Object.entries(SCRIPT_LIB_IMPORTS)) {
+  const scriptPath = join(ROOT, "scripts", script);
+  if (!existsSync(scriptPath)) {
+    fail(`missing script entrypoint: scripts/${script}`);
+    continue;
+  }
+  for (const lib of libs) {
+    if (!existsSync(join(ROOT, "scripts/lib", lib))) {
+      fail(`scripts/${script} requires scripts/lib/${lib} but file is missing`);
+    }
+  }
+}
+
+for (const lib of BOOTSTRAP_LIB_FILES) {
+  if (!existsSync(join(ROOT, "scripts/lib", lib))) {
+    fail(`bootstrap lib manifest missing in template: scripts/lib/${lib}`);
+  }
+}
+
+for (const script of BOOTSTRAP_SCRIPT_MJS) {
+  if (!existsSync(join(ROOT, "scripts", script))) {
+    fail(`bootstrap script manifest missing in template: scripts/${script}`);
+  }
+}
+
+const bootstrapSh = readFileSync(join(ROOT, "scripts/bootstrap-harness.sh"), "utf8");
+for (const lib of BOOTSTRAP_LIB_FILES) {
+  if (!bootstrapSh.includes(lib)) {
+    fail(`bootstrap-harness.sh does not copy scripts/lib/${lib}`);
+  }
 }
 
 if (errors > 0) {

@@ -1,0 +1,10 @@
+id: e2e-009
+class: test-fix
+stack: any
+description: Validate diff-size autonomy limits match operations policy
+acceptance:
+  - L2 and L3 limits are codified in diff-size module
+verification_contains:
+  - scripts/lib/diff-size.mjs::L2: { loc: 120, files: 4 }
+  - scripts/lib/diff-size.mjs::L3: { loc: 60, files: 2 }
+  - scripts/lib/diff-size.mjs::L1: { loc: 300, files: 8 }
