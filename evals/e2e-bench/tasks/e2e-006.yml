@@ -5,6 +5,6 @@ description: Validate sample/ruby unit-test acceptance
 acceptance:
   - rspec passes in sample/ruby
 verification_commands:
-  - sample/ruby::bundle exec rspec
+  - cmd:bundle@sample/ruby::bundle exec rspec
 verification_contains:
   - sample/ruby/spec/add_spec.rb::expect(Add.add(2, 3)).to eq(5)

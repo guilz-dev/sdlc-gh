@@ -23,44 +23,6 @@ sdlc-gh addresses these with three design rules:
 
 The full architecture and rationale live in [docs/arch.md](docs/arch.md).
 
-## Architecture
-
-The harness is a **dual-loop control system**: a fast inner loop (agent + deterministic walls) and a slower outer loop (eval + harness revision).
-
-```mermaid
-flowchart LR
-    subgraph OUTER["Outer loop (daily–weekly)"]
-        EVAL[Eval / traces]
-        REVISE[Revise instructions / walls]
-    end
-    subgraph INNER["Inner loop (per task)"]
-        FF[Feed-forward<br/>instructions / agents / skills]
-        AGENT[Agent<br/>plan → act → test]
-        WALL[Walls<br/>CI / hooks / diff-size]
-    end
-    Issue[Issue + CC-SD] --> FF
-    FF --> AGENT --> WALL
-    WALL -- fail --> AGENT
-    WALL -- pass --> PR[Draft PR]
-    AGENT -.-> EVAL
-    PR -.-> EVAL
-    EVAL --> REVISE
-    REVISE --> FF
-```
-
-Layers as implemented in this repo (details in [docs/arch.md](docs/arch.md)):
-
-```mermaid
-flowchart TB
-    L0[L0 Governance<br/>rulesets · CODEOWNERS · labels]
-    L1[L1 Feed-forward<br/>instructions · agents · skills]
-    L2[L2 Execution<br/>coding agent · CLI · gh-aw stubs]
-    L3[L3 Walls<br/>harness-ci · product-ci · hooks]
-    L4[L4–L6 Observability · Eval · Outer loop<br/>Langfuse · eval-ci · nightly review stubs]
-    L0 --> L1 --> L2 --> L3 --> L4
-    L4 -. revise .-> L1
-```
-
 ## Quick start
 
 Requirements: a GitHub repository with Actions enabled; Node.js 18+ for basic local checks. Use Node.js 22 for full parity with CI, including all executable E2E verifiers.
@@ -203,6 +165,44 @@ Known placeholders:
 - `run-e2e-bench.mjs` validates executable acceptance checks for task fixtures, but it is not yet a full break-and-fix agent benchmark
 - `gh models eval` steps in Eval CI are non-blocking until GitHub Models is enabled for your organization
 
+## Architecture
+
+The harness is a **dual-loop control system**: a fast inner loop (agent + deterministic walls) and a slower outer loop (eval + harness revision).
+
+```mermaid
+flowchart LR
+    subgraph OUTER["Outer loop (daily–weekly)"]
+        EVAL[Eval / traces]
+        REVISE[Revise instructions / walls]
+    end
+    subgraph INNER["Inner loop (per task)"]
+        FF[Feed-forward<br/>instructions / agents / skills]
+        AGENT[Agent<br/>plan → act → test]
+        WALL[Walls<br/>CI / hooks / diff-size]
+    end
+    Issue[Issue + CC-SD] --> FF
+    FF --> AGENT --> WALL
+    WALL -- fail --> AGENT
+    WALL -- pass --> PR[Draft PR]
+    AGENT -.-> EVAL
+    PR -.-> EVAL
+    EVAL --> REVISE
+    REVISE --> FF
+```
+
+Layers as implemented in this repo (details in [docs/arch.md](docs/arch.md)):
+
+```mermaid
+flowchart TB
+    L0[L0 Governance<br/>rulesets · CODEOWNERS · labels]
+    L1[L1 Feed-forward<br/>instructions · agents · skills]
+    L2[L2 Execution<br/>coding agent · CLI · gh-aw stubs]
+    L3[L3 Walls<br/>harness-ci · product-ci · hooks]
+    L4[L4–L6 Observability · Eval · Outer loop<br/>Langfuse · eval-ci · nightly review stubs]
+    L0 --> L1 --> L2 --> L3 --> L4
+    L4 -. revise .-> L1
+```
+
 ## Documentation
 
 | Document | Contents |
@@ -218,6 +218,10 @@ Known placeholders:
 | [docs/shared-config.md](docs/shared-config.md) | Distributing shared assets across repositories |
 | [docs/exceptions/README.md](docs/exceptions/README.md) | Recording policy exceptions |
 | [infra/README.md](infra/README.md) | Self-hosting Langfuse / OTel |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution workflow and review expectations |
+| [SECURITY.md](SECURITY.md) | Vulnerability reporting policy |
+| [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Community behavior expectations |
+| [SUPPORT.md](SUPPORT.md) | Support routes and troubleshooting intake |
 
 ## FAQ
 
@@ -227,12 +231,12 @@ A. Re-run `bootstrap-harness.sh` to overwrite harness assets, then review the di
 **Q. Does the harness itself need a test framework (Jest etc.)?**
 A. No. The harness is guarded by the `scripts/*.mjs` checks and `eval-ci`. Your application keeps its own test runner (vitest / pytest / go test / rspec / phpunit).
 
-## Contributing
+## Project policies
 
-Issues and PRs are welcome. Note that this repository applies its own rules to itself:
-
-- Changes to harness assets (`.github/**`, `evals/**`, `prompts/**`) trigger Eval CI and require harness-engineer review via CODEOWNERS
-- Keep PRs within the autonomy size limits in [docs/operations.md](docs/operations.md)
+- Contribution guide: [CONTRIBUTING.md](CONTRIBUTING.md)
+- Security reporting: [SECURITY.md](SECURITY.md)
+- Code of conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+- Support: [SUPPORT.md](SUPPORT.md)
 
 ## License
 

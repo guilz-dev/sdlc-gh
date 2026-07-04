@@ -56,6 +56,18 @@ function supportsRequirement(requirement) {
   if (!requirement) return true;
   const nodeReq = requirement.match(/^node>=(\d+)$/);
   if (nodeReq) return nodeMajor >= Number(nodeReq[1]);
+  const cmdReq = requirement.match(/^cmd:(.+)$/);
+  if (cmdReq) {
+    try {
+      execSync(`command -v ${cmdReq[1]}`, {
+        stdio: "pipe",
+        encoding: "utf8",
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  }
   return true;
 }
 
