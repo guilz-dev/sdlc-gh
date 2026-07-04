@@ -22,6 +22,10 @@
   color: "D93F0B"
   description: CI, IaC, permissions
 
+- name: task:gh-aw-dogfood
+  color: "C5DEF5"
+  description: Bounded gh-aw validation on sdlc-gh (see docs/gh-aw-dogfood.md)
+
 - name: task:security-sensitive
   color: "B60205"
   description: Auth, billing, secrets

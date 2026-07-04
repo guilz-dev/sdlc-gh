@@ -57,7 +57,7 @@ When pulling harness updates, review these intentional behavior alignments with 
 | 3 | Eval CI + ruleset eval required | Medium |
 | 4 | Coding agent L1 on `task:docs` / `task:test-fix` (CC-SD contract required) | Low tasks first |
 
-gh-aw outer loop (`nightly-harness-review`, `weekly-redteam`) remains **stub** — do not enable until a separate epic validates `gh aw compile`. See [arch.md](arch.md) implementation status.
+gh-aw outer loop: use the **gh-aw dogfood track** ([gh-aw-dogfood.md](gh-aw-dogfood.md)) for bounded `gh aw compile` validation on `sdlc-gh` itself. Standard GHA aggregation remains the operational baseline — see [nightly-harness-review.md](nightly-harness-review.md). Do not enable unrestricted gh-aw across the repo until dogfood criteria stay green over multiple runs.
 
 ```bash
 ./scripts/bootstrap-harness.sh \

@@ -1,0 +1,61 @@
+{
+  "schema_version": "1",
+  "generated_at": "2026-07-04T02:00:00.000Z",
+  "repo": "org/product",
+  "window_hours": 24,
+  "rollup": {
+    "telemetry_records": 4,
+    "task_groups": 2,
+    "failure_groups": 2,
+    "by_wall_failure_type": {
+      "test": 1,
+      "lint": 1
+    },
+    "repeated_failure_signatures": [
+      {
+        "wall_failure_type": "lint",
+        "record_count": 2,
+        "task_count": 1,
+        "task_ids": ["7"]
+      }
+    ],
+    "retry_exhaustion_count": 1,
+    "review_rejection_proxy_count": 0,
+    "by_classification": {
+      "モデル限界": 1,
+      "FF不足": 1
+    }
+  },
+  "classifications": [
+    {
+      "repo": "org/product",
+      "task_id": "42",
+      "pr_number": 101,
+      "task_class": "docs",
+      "autonomy_level": "L1",
+      "classification": "モデル限界",
+      "rationale": "Retry budget exhausted or escalated (max_retry_count=3)",
+      "wall_failure_types": ["test"],
+      "max_retry_count": 3,
+      "final_outcome": "escalated",
+      "review_outcome": "pending",
+      "sources": ["agent-retry-orchestrator"],
+      "workflow_run_ids": [123456789]
+    },
+    {
+      "repo": "org/product",
+      "task_id": "7",
+      "pr_number": 102,
+      "task_class": "test-fix",
+      "autonomy_level": "L1",
+      "classification": "FF不足",
+      "rationale": "Repeated lint or issue-spec convention failures",
+      "wall_failure_types": ["lint"],
+      "max_retry_count": 1,
+      "final_outcome": "in_progress",
+      "review_outcome": "pending",
+      "sources": ["harness-ci", "agent-retry-orchestrator"],
+      "workflow_run_ids": [123456790, 123456791]
+    }
+  ]
+}

@@ -189,7 +189,7 @@ Known placeholders (aligned with [docs/arch.md](docs/arch.md) implementation sta
 | Retry orchestrator, PR context comments | **Implemented** |
 | E2E bench (executable acceptance checks) | **Partial** — 9 tasks; not yet break-and-fix agent runner |
 | `gh models eval` in CI | **Scaffolded** — runs when prompts exist; org must enable Models |
-| gh-aw outer loop (`nightly-harness-review`, `weekly-redteam`) | **Stub** — Markdown + lock.yml placeholders; **does not compile** with `gh aw compile`; compileability not guaranteed; deferred to a separate epic due to Public Preview dependency |
+| gh-aw outer loop (`nightly-harness-review`, `weekly-redteam`) | **Partial** — GHA outer loop + gh-aw dogfood CI (#7); `.md`/`.lock.yml` stubs remain |
 | Langfuse / OTel export | **Scaffolded** — `infra/` + schema; wiring optional |
 
 ### Observability placeholders (spec only)
@@ -255,6 +255,7 @@ flowchart TB
 | [docs/kpi-baseline.md](docs/kpi-baseline.md) | Weekly KPI tracking template |
 | [docs/telemetry-schema.md](docs/telemetry-schema.md) | Required observability fields |
 | [docs/telemetry-artifacts.md](docs/telemetry-artifacts.md) | Inner-loop JSON artifact format and storage |
+| [docs/gh-aw-dogfood.md](docs/gh-aw-dogfood.md) | Bounded gh-aw validation on sdlc-gh |
 | [docs/auth-boundaries.md](docs/auth-boundaries.md) | Credential boundaries per execution mode |
 | [docs/shared-config.md](docs/shared-config.md) | Distributing shared assets across repositories |
 | [docs/exceptions/README.md](docs/exceptions/README.md) | Recording policy exceptions |

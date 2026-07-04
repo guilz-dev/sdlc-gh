@@ -89,6 +89,55 @@ def test_retry_policy_matches_operations_doc():
     assert "Same failure signature detected twice" in orchestrator
 
 
+def test_gh_aw_dogfood_label_and_doc():
+    labels = read(".github/labels.yml")
+    assert "task:gh-aw-dogfood" in labels
+    dogfood = read("docs/gh-aw-dogfood.md")
+    assert "task:gh-aw-dogfood" in dogfood
+    assert "nightly-harness-review.yml" in dogfood
+
+
+def test_harness_review_classes_align_with_failure_taxonomy():
+    taxonomy = read("docs/failure-taxonomy.md")
+    lib = read("scripts/lib/harness-review.mjs")
+    match = re.search(r"export const FAILURE_CLASSES = \[([\s\S]*?)\];", lib)
+    assert match, "FAILURE_CLASSES not found in harness-review.mjs"
+    classes = re.findall(r'"([^"]+)"', match.group(1))
+    for label in ("FF不足", "壁不足", "モデル限界"):
+        assert label in taxonomy
+        assert label in classes
+    assert "unclassified" in classes
+
+
+def test_telemetry_fetch_workflows_align_with_emitters():
+    fetch = read("scripts/fetch-telemetry-artifacts.mjs")
+    docs = read("docs/telemetry-artifacts.md")
+    bootstrap = read("scripts/bootstrap-harness.sh")
+    workflows = re.findall(r'workflow: "([^"]+\.yml)"', fetch)
+    assert workflows, "TELEMETRY_WORKFLOWS missing in fetch-telemetry-artifacts.mjs"
+    for wf in workflows:
+        assert (ROOT / ".github/workflows" / wf).is_file(), f"missing emitter workflow {wf}"
+        assert wf in bootstrap, f"bootstrap-harness.sh does not copy {wf}"
+    assert "harness-telemetry-" in fetch
+    assert "eval-telemetry-" in fetch
+    assert "retry-telemetry-" in fetch
+    assert "pr-context-telemetry-" in fetch
+    for source in ("harness-ci", "eval-ci", "agent-retry-orchestrator", "pr-context"):
+        assert f"`{source}`" in docs
+
+
+def test_nightly_harness_review_bootstrap_and_workflow():
+    bootstrap = read("scripts/bootstrap-harness.sh")
+    assert "nightly-harness-review.yml" in bootstrap
+    assert "fetch-telemetry-artifacts.mjs" in bootstrap
+    assert "aggregate-harness-review.mjs" in bootstrap
+    assert "harness-review.mjs" in bootstrap
+    assert (ROOT / ".github/workflows/nightly-harness-review.yml").is_file()
+    nightly = read(".github/workflows/nightly-harness-review.yml")
+    assert "fetch-telemetry-artifacts.mjs" in nightly
+    assert "aggregate-harness-review.mjs" in nightly
+
+
 def _parse_ccsd_exports() -> tuple[list[str], list[str], list[str]]:
     """Read canonical CC-SD field names from scripts/lib/ccsd-contract.mjs."""
     contract = read("scripts/lib/ccsd-contract.mjs")

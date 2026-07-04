@@ -1,0 +1,73 @@
+name: gh-aw dogfood CI
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/nightly-harness-review.md"
+      - ".github/workflows/nightly-harness-review.lock.yml"
+      - ".github/workflows/weekly-redteam.md"
+      - ".github/workflows/weekly-redteam.lock.yml"
+      - ".github/workflows/gh-aw-dogfood-ci.yml"
+      - ".github/labels.yml"
+      - ".github/aw/**"
+      - "scripts/**gh-aw**"
+      - "scripts/lib/gh-aw-dogfood.mjs"
+      - "docs/gh-aw-dogfood.md"
+      - "docs/nightly-harness-review.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dogfood:
+    name: validate-gh-aw-track
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install gh aw extension
+        env:
+          GH_AW_VERSION: v0.81.6
+        run: |
+          if gh extension list 2>/dev/null | grep -q 'github/gh-aw'; then
+            gh extension upgrade github/gh-aw --pin "$GH_AW_VERSION"
+          else
+            gh extension install github/gh-aw --pin "$GH_AW_VERSION"
+          fi
+
+      - name: Dogfood scenario tests
+        run: node scripts/test-gh-aw-dogfood-scenarios.mjs
+
+      - name: Enforce dogfood path scope
+        if: github.event_name == 'pull_request'
+        env:
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          BASE_SHA: origin/${{ github.base_ref }}
+        run: node scripts/check-gh-aw-dogfood-scope.mjs
+
+      - name: Validate gh-aw compile (when CLI available)
+        env:
+          GH_AW_COMPILE_REQUIRED: "0"
+        run: node scripts/validate-gh-aw-compile.mjs
+
+      - name: Emit dogfood evaluation report
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          BASE_SHA: origin/${{ github.base_ref }}
+          DOGFOOD_REPORT_DIR: dogfood-report
+        run: node scripts/emit-gh-aw-dogfood-report.mjs
+
+      - name: Upload dogfood report
+        uses: actions/upload-artifact@v4
+        with:
+          name: gh-aw-dogfood-${{ github.run_id }}
+          path: dogfood-report/
+          if-no-files-found: error

@@ -59,6 +59,12 @@ jobs:
       - name: Telemetry artifact scenario tests
         run: node scripts/test-telemetry-artifact-scenarios.mjs
 
+      - name: Harness review scenario tests
+        run: node scripts/test-harness-review-scenarios.mjs
+
+      - name: gh-aw dogfood scenario tests
+        run: node scripts/test-gh-aw-dogfood-scenarios.mjs
+
   issue-spec-check:
     name: issue-spec-check
     runs-on: ubuntu-latest

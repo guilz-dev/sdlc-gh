@@ -1,0 +1,44 @@
+{
+  "schema_version": "1",
+  "generated_at": "2026-07-04T12:00:00.000Z",
+  "repo": "guilz-dev/sdlc-gh",
+  "track": "gh-aw-dogfood",
+  "pass": true,
+  "criteria": {
+    "scope": {
+      "pass": true,
+      "issues": []
+    },
+    "safe_outputs": {
+      "pass": true,
+      "workflows": {
+        "nightly-harness-review": {
+          "ok": true,
+          "issues": []
+        },
+        "weekly-redteam": {
+          "ok": true,
+          "issues": []
+        }
+      }
+    },
+    "compile": {
+      "pass": true,
+      "skipped": false,
+      "issues": []
+    },
+    "lock_drift": {
+      "pass": true,
+      "issues": []
+    },
+    "reviewability": {
+      "pass": true,
+      "note": "Outputs limited to PRs, summaries, compile results, or issues — no auto-merge"
+    }
+  },
+  "rollback": {
+    "trigger": "gh-aw preview regression, compile failure, or safe-output policy breach on dogfood track",
+    "action": "Revert .md/.lock.yml pair and disable gh-aw-dogfood-ci until upstream fix; keep GHA outer loop",
+    "doc": "docs/gh-aw-dogfood.md#rollback"
+  }
+}

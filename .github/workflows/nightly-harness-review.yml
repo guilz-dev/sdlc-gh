@@ -1,0 +1,49 @@
+name: Nightly harness review
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      window_hours:
+        description: Hours of telemetry to aggregate
+        required: false
+        default: "24"
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  review:
+    name: aggregate-and-classify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Fetch telemetry artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          WINDOW_HOURS: ${{ github.event_name == 'workflow_dispatch' && inputs.window_hours || 24 }}
+          TELEMETRY_COLLECT_DIR: telemetry-collected
+        run: node scripts/fetch-telemetry-artifacts.mjs
+
+      - name: Aggregate and classify failures
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          WINDOW_HOURS: ${{ github.event_name == 'workflow_dispatch' && inputs.window_hours || 24 }}
+          TELEMETRY_COLLECT_DIR: telemetry-collected
+          HARNESS_REVIEW_OUT_DIR: harness-review
+        run: node scripts/aggregate-harness-review.mjs
+
+      - name: Upload harness review summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-harness-review-${{ github.run_id }}
+          path: harness-review/
+          if-no-files-found: error
