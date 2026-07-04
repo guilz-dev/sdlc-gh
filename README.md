@@ -202,7 +202,7 @@ Until Langfuse / OTel is wired, PR context comments use fixed placeholders (work
 | AI credits | Informational — `_set max-ai-credits in org settings_` |
 | Threat detection | `n/a` — gh-aw outer loop remains stub |
 
-Validate sample payloads: `node scripts/validate-telemetry.mjs "$(cat infra/samples/telemetry-payload.json)"`. See [docs/telemetry-schema.md](docs/telemetry-schema.md).
+Validate sample payloads: `node scripts/validate-telemetry.mjs "$(cat infra/samples/telemetry-payload.json)"` and `node scripts/validate-telemetry.mjs "$(cat infra/samples/telemetry-artifact.json)"`. Inner-loop workflows emit artifacts per [docs/telemetry-artifacts.md](docs/telemetry-artifacts.md); field definitions in [docs/telemetry-schema.md](docs/telemetry-schema.md).
 
 ## Architecture
 
@@ -254,6 +254,7 @@ flowchart TB
 | [docs/failure-taxonomy.md](docs/failure-taxonomy.md) | Classifying failures for outer-loop routing |
 | [docs/kpi-baseline.md](docs/kpi-baseline.md) | Weekly KPI tracking template |
 | [docs/telemetry-schema.md](docs/telemetry-schema.md) | Required observability fields |
+| [docs/telemetry-artifacts.md](docs/telemetry-artifacts.md) | Inner-loop JSON artifact format and storage |
 | [docs/auth-boundaries.md](docs/auth-boundaries.md) | Credential boundaries per execution mode |
 | [docs/shared-config.md](docs/shared-config.md) | Distributing shared assets across repositories |
 | [docs/exceptions/README.md](docs/exceptions/README.md) | Recording policy exceptions |

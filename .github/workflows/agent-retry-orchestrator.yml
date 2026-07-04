@@ -17,6 +17,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Evaluate retry policy
+        id: retry
         uses: actions/github-script@v7
         with:
           script: |
@@ -26,19 +27,24 @@ jobs:
             let pr = linked[0];
             if (!pr) {
               core.info('No PR associated with failed check suite');
+              core.setOutput('skip_telemetry', '1');
               return;
             }
             const prNumber = pr.number;
             if (!prNumber) {
               core.info('Could not resolve PR number');
+              core.setOutput('skip_telemetry', '1');
               return;
             }
+            core.setOutput('pr_number', String(prNumber));
             const { data: fullPr } = await github.rest.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: prNumber,
             });
             const labels = fullPr.labels.map((l) => l.name);
+            core.setOutput('pr_labels', labels.join(','));
+            core.setOutput('pr_body', fullPr.body || '');
             const retryLabel = labels.find((l) => l.startsWith('retry:'));
             const count = retryLabel ? parseInt(retryLabel.split(':')[1], 10) || 0 : 0;
 
@@ -50,9 +56,12 @@ jobs:
             const failed = checkRuns.check_runs.filter((c) => c.conclusion === 'failure');
             const failureType = failed[0]?.name || suite.app?.slug || 'ci';
             const sig = failed.map((c) => `${c.name}:${c.conclusion}`).sort().join('|') || failureType;
+            core.setOutput('wall_failure_type', failureType);
+            core.setOutput('retry_count', String(count));
 
             const noRetry = /security|zizmor|codeql/i.test(failureType);
             if (noRetry) {
+              core.setOutput('final_outcome', 'escalated');
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -69,6 +78,7 @@ jobs:
             });
             const sigMatches = comments.filter((c) => c.body?.includes(`failure_sig: \`${sig}\``));
             if (sigMatches.length >= 1) {
+              core.setOutput('final_outcome', 'escalated');
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -79,6 +89,7 @@ jobs:
             }
 
             if (count >= MAX_RETRIES) {
+              core.setOutput('final_outcome', 'escalated');
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -88,6 +99,8 @@ jobs:
               return;
             }
             const newCount = count + 1;
+            core.setOutput('retry_count', String(newCount));
+            core.setOutput('final_outcome', 'in_progress');
             if (retryLabel) {
               await github.rest.issues.removeLabel({
                 owner: context.repo.owner,
@@ -114,3 +127,35 @@ jobs:
                 `failure_sig: \`${sig}\``,
               ].join('\n'),
             });
+
+      - uses: actions/setup-node@v4
+        if: steps.retry.outputs.skip_telemetry != '1'
+        with:
+          node-version: "22"
+
+      - name: Emit retry telemetry artifact
+        if: steps.retry.outputs.skip_telemetry != '1'
+        env:
+          TELEMETRY_SOURCE: agent-retry-orchestrator
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+          GITHUB_WORKFLOW: ${{ github.workflow }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ steps.retry.outputs.pr_number }}
+          PR_BODY: ${{ steps.retry.outputs.pr_body }}
+          PR_LABELS: ${{ steps.retry.outputs.pr_labels }}
+          WALL_FAILURE_TYPE: ${{ steps.retry.outputs.wall_failure_type }}
+          RETRY_COUNT: ${{ steps.retry.outputs.retry_count }}
+          FINAL_OUTCOME: ${{ steps.retry.outputs.final_outcome }}
+          AGENT_TYPE: orchestrator
+          EXECUTION_MODE: gh_aw
+        run: node scripts/emit-telemetry-artifact.mjs
+
+      - name: Upload retry telemetry artifact
+        if: steps.retry.outputs.skip_telemetry != '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: retry-telemetry-${{ github.run_id }}
+          path: telemetry-artifacts/
+          if-no-files-found: error

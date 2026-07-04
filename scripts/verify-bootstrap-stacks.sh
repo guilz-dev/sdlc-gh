@@ -54,7 +54,7 @@ assert_bootstrapped_repo() {
     exit 1
   fi
 
-  for lib in diff-size.mjs e2e-manifest.mjs doctor-local.mjs github-config.mjs; do
+  for lib in bootstrap-copy.mjs diff-size.mjs e2e-manifest.mjs doctor-local.mjs github-config.mjs; do
     if [[ ! -f "$target/scripts/lib/$lib" ]]; then
       echo "bootstrap missing scripts/lib/$lib for stack=$stack" >&2
       exit 1

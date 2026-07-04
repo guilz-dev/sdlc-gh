@@ -22,13 +22,14 @@ docker run -p 4317:4317 -p 4318:4318 \
 
 ## Connect harness telemetry
 
-1. Export spans with required fields per [docs/telemetry-schema.md](../docs/telemetry-schema.md).
+1. Export spans with required fields per [docs/telemetry-schema.md](../docs/telemetry-schema.md), or consume inner-loop JSON artifacts from [docs/telemetry-artifacts.md](../docs/telemetry-artifacts.md).
 2. Point exporters at collector `:4317` (gRPC) or `:4318` (HTTP).
 3. Uncomment Langfuse OTLP exporter in `otel/collector-config.yml` when ready.
 4. Validate payloads:
 
 ```bash
 node scripts/validate-telemetry.mjs "$(cat infra/samples/telemetry-payload.json)"
+node scripts/validate-telemetry.mjs "$(cat infra/samples/telemetry-artifact.json)"
 ```
 
 ## Environment variables (CI / local)

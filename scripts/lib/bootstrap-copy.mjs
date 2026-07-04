@@ -4,6 +4,7 @@
  */
 
 export const BOOTSTRAP_LIB_FILES = [
+  "bootstrap-copy.mjs",
   "stacks.mjs",
   "harness-ci-fragments.mjs",
   "ccsd-contract.mjs",
@@ -11,6 +12,7 @@ export const BOOTSTRAP_LIB_FILES = [
   "diff-size.mjs",
   "e2e-manifest.mjs",
   "doctor-local.mjs",
+  "telemetry-artifact.mjs",
 ];
 
 export const BOOTSTRAP_SCRIPT_MJS = [
@@ -20,6 +22,7 @@ export const BOOTSTRAP_SCRIPT_MJS = [
   "select-eval-jobs.mjs",
   "check-e2e-manifest.mjs",
   "validate-telemetry.mjs",
+  "emit-telemetry-artifact.mjs",
   "check-open-pr-limit.mjs",
   "test-hooks-scenarios.mjs",
   "test-issue-spec-scenarios.mjs",
@@ -27,6 +30,8 @@ export const BOOTSTRAP_SCRIPT_MJS = [
   "test-e2e-manifest-scenarios.mjs",
   "test-setup-github-scenarios.mjs",
   "test-doctor-scenarios.mjs",
+  "test-telemetry-artifact-scenarios.mjs",
+  "test-bootstrap-guidance-scenarios.mjs",
   "harness-drift-report.mjs",
   "check-eval-score-drift.mjs",
   "run-e2e-bench.mjs",
@@ -47,6 +52,7 @@ export const BOOTSTRAP_DOCS = [
   "auth-boundaries.md",
   "failure-taxonomy.md",
   "telemetry-schema.md",
+  "telemetry-artifacts.md",
   "shared-config.md",
   "coding-agent-l1.md",
   "kpi-baseline.md",
@@ -64,4 +70,7 @@ export const SCRIPT_LIB_IMPORTS = {
   "test-e2e-manifest-scenarios.mjs": ["e2e-manifest.mjs"],
   "test-setup-github-scenarios.mjs": ["github-config.mjs"],
   "test-doctor-scenarios.mjs": ["doctor-local.mjs"],
+  "emit-telemetry-artifact.mjs": ["telemetry-artifact.mjs", "ccsd-contract.mjs", "diff-size.mjs"],
+  "validate-telemetry.mjs": ["telemetry-artifact.mjs"],
+  "test-telemetry-artifact-scenarios.mjs": ["telemetry-artifact.mjs"],
 };

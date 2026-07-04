@@ -202,6 +202,38 @@ EOF
   esac
 }
 
+resolve_github_repo_name() {
+  if ! command -v gh >/dev/null 2>&1; then
+    return 1
+  fi
+  gh repo view --json nameWithOwner 2>/dev/null \
+    | node --input-type=module -e "
+      const chunks = [];
+      for await (const chunk of process.stdin) chunks.push(chunk);
+      const text = chunks.join('').trim();
+      if (!text) process.exit(1);
+      const parsed = JSON.parse(text);
+      if (!parsed.nameWithOwner) process.exit(1);
+      console.log(parsed.nameWithOwner);
+    " 2>/dev/null
+}
+
+print_next_step() {
+  local setup_cmd
+  if [[ -d "$REPO/.git" ]] || git -C "$REPO" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    if (cd "$REPO" && resolve_github_repo_name >/dev/null); then
+      setup_cmd="./scripts/setup-github.sh --yes"
+    else
+      setup_cmd="./scripts/setup-github.sh --github-repo OWNER/REPO --yes"
+    fi
+  else
+    setup_cmd="./scripts/setup-github.sh --github-repo OWNER/REPO --yes"
+  fi
+
+  echo "Next: $setup_cmd"
+  echo "      Replace OWNER/REPO with your GitHub repository if auto-detection is unavailable."
+}
+
 replace_codeowners_placeholder() {
   node --input-type=module -e "
     import { readFileSync, writeFileSync } from 'node:fs';
@@ -277,7 +309,7 @@ echo "Bootstrapping harness into $REPO (stack=$STACK, mode=$MODE)"
 
 # Core docs
 mkdir -p "$REPO/docs" "$REPO/docs/exceptions"
-for f in operations.md adoption.md auth-boundaries.md failure-taxonomy.md telemetry-schema.md \
+for f in operations.md adoption.md auth-boundaries.md failure-taxonomy.md telemetry-schema.md telemetry-artifacts.md \
   shared-config.md coding-agent-l1.md kpi-baseline.md revert-playbook.md; do
   cp "$TEMPLATE_ROOT/docs/$f" "$REPO/docs/" 2>/dev/null || true
 done
@@ -322,9 +354,10 @@ cp "$TEMPLATE_ROOT/.github/ruleset.harness-eval.example.json" "$REPO/.github/" 2
 # Scripts
 mkdir -p "$REPO/scripts/lib"
 for s in validate-harness.mjs check-diff-size.mjs check-issue-spec.mjs select-eval-jobs.mjs \
-  check-e2e-manifest.mjs validate-telemetry.mjs check-open-pr-limit.mjs \
+  check-e2e-manifest.mjs validate-telemetry.mjs emit-telemetry-artifact.mjs check-open-pr-limit.mjs \
   test-hooks-scenarios.mjs test-issue-spec-scenarios.mjs test-diff-size-scenarios.mjs \
   test-e2e-manifest-scenarios.mjs test-setup-github-scenarios.mjs test-doctor-scenarios.mjs \
+  test-telemetry-artifact-scenarios.mjs test-bootstrap-guidance-scenarios.mjs \
   harness-drift-report.mjs check-eval-score-drift.mjs run-e2e-bench.mjs doctor.mjs setup-github.mjs; do
   cp "$TEMPLATE_ROOT/scripts/$s" "$REPO/scripts/" 2>/dev/null || true
 done
@@ -332,7 +365,7 @@ for s in bootstrap-harness.sh setup-github.sh verify-bootstrap-stacks.sh; do
   cp "$TEMPLATE_ROOT/scripts/$s" "$REPO/scripts/" 2>/dev/null || true
 done
 for s in stacks.mjs harness-ci-fragments.mjs ccsd-contract.mjs github-config.mjs \
-  diff-size.mjs e2e-manifest.mjs doctor-local.mjs bootstrap-copy.mjs; do
+  diff-size.mjs e2e-manifest.mjs doctor-local.mjs bootstrap-copy.mjs telemetry-artifact.mjs; do
   cp "$TEMPLATE_ROOT/scripts/lib/$s" "$REPO/scripts/lib/" 2>/dev/null || true
 done
 cp "$TEMPLATE_ROOT/scripts/trim-harness-ci.mjs" "$REPO/scripts/" 2>/dev/null || true
@@ -364,6 +397,8 @@ cp "$TEMPLATE_ROOT/infra/langfuse/docker-compose.yml" "$REPO/infra/langfuse/" 2>
 cp "$TEMPLATE_ROOT/infra/otel/collector-config.yml" "$REPO/infra/otel/" 2>/dev/null || true
 cp "$TEMPLATE_ROOT/infra/README.md" "$REPO/infra/" 2>/dev/null || true
 cp "$TEMPLATE_ROOT/infra/samples/telemetry-payload.json" "$REPO/infra/samples/" 2>/dev/null || true
+cp "$TEMPLATE_ROOT/infra/samples/telemetry-artifact.json" "$REPO/infra/samples/" 2>/dev/null || true
 
 echo "Done. Stack=$STACK mode=$MODE"
-echo "Next: ./scripts/setup-github.sh --yes && ./scripts/doctor.mjs --strict"
+print_next_step
+echo "Then: ./scripts/doctor.mjs --strict"

@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "validate": "node scripts/validate-harness.mjs",
-    "check": "npm run validate && npm run test-hooks && npm run test-issue-spec && npm run test-diff-size && npm run test-e2e-manifest && npm run test-setup-github && npm run test-doctor && npm run check-e2e && npm run run-e2e",
+    "check": "npm run validate && npm run test-hooks && npm run test-issue-spec && npm run test-diff-size && npm run test-e2e-manifest && npm run test-setup-github && npm run test-doctor && npm run test-bootstrap-guidance && npm run check-e2e && npm run run-e2e",
     "check-e2e": "node scripts/check-e2e-manifest.mjs",
     "test-diff-size": "node scripts/test-diff-size-scenarios.mjs",
     "test-e2e-manifest": "node scripts/test-e2e-manifest-scenarios.mjs",
@@ -15,6 +15,7 @@
     "test-issue-spec": "node scripts/test-issue-spec-scenarios.mjs",
     "test-setup-github": "node scripts/test-setup-github-scenarios.mjs",
     "test-doctor": "node scripts/test-doctor-scenarios.mjs",
+    "test-bootstrap-guidance": "node scripts/test-bootstrap-guidance-scenarios.mjs",
     "check-open-prs": "node scripts/check-open-pr-limit.mjs",
     "drift-report": "node scripts/harness-drift-report.mjs",
     "run-e2e": "node scripts/run-e2e-bench.mjs",

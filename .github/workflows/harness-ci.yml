@@ -56,6 +56,9 @@ jobs:
       - name: Doctor scenario tests
         run: node scripts/test-doctor-scenarios.mjs
 
+      - name: Telemetry artifact scenario tests
+        run: node scripts/test-telemetry-artifact-scenarios.mjs
+
   issue-spec-check:
     name: issue-spec-check
     runs-on: ubuntu-latest
@@ -179,3 +182,51 @@ jobs:
     needs: detect-projects
     if: needs.detect-projects.outputs.php == 'true'
     uses: ./.github/workflows/product-ci-php.yml
+
+  telemetry:
+    name: telemetry-artifact
+    runs-on: ubuntu-latest
+    if: always() && github.event_name == 'pull_request'
+    needs:
+      - harness-static
+      - issue-spec-check
+      - open-pr-limit
+      - diff-size
+      - detect-projects
+      - product-ts
+      - product-python
+      - product-go
+      - product-ruby
+      - product-php
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Emit harness CI telemetry artifact
+        env:
+          TELEMETRY_SOURCE: harness-ci
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+          GITHUB_WORKFLOW: ${{ github.workflow }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          BASE_SHA: origin/${{ github.base_ref }}
+          JOB_RESULTS: ${{ toJSON(needs) }}
+          EXECUTION_MODE: ci
+          FINAL_OUTCOME: in_progress
+        run: node scripts/emit-telemetry-artifact.mjs
+
+      - name: Upload harness telemetry artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: harness-telemetry-${{ github.run_id }}
+          path: telemetry-artifacts/
+          if-no-files-found: error

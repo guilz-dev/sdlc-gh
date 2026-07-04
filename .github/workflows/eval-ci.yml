@@ -121,3 +121,49 @@ jobs:
         run: |
           node scripts/check-e2e-manifest.mjs
           node scripts/run-e2e-bench.mjs
+
+  telemetry:
+    name: telemetry-artifact
+    runs-on: ubuntu-latest
+    if: always() && github.event_name == 'pull_request'
+    needs:
+      - select
+      - prompt-eval
+      - agent-policy
+      - trajectory-conventions
+      - trajectory-task
+      - meta-eval
+      - e2e-bench
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Emit eval CI telemetry artifact
+        env:
+          TELEMETRY_SOURCE: eval-ci
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+          GITHUB_WORKFLOW: ${{ github.workflow }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number || 0 }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          BASE_SHA: origin/${{ github.base_ref }}
+          JOB_RESULTS: ${{ toJSON(needs) }}
+          AGENT_TYPE: eval
+          EXECUTION_MODE: ci
+          FINAL_OUTCOME: in_progress
+        run: node scripts/emit-telemetry-artifact.mjs
+
+      - name: Upload eval telemetry artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-telemetry-${{ github.run_id }}
+          path: telemetry-artifacts/
+          if-no-files-found: error

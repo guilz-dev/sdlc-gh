@@ -34,13 +34,18 @@ Minimum structured fields for agent harness observability (arch.md §5.4). Expor
 | Autonomy distribution | `autonomy_level`, `task_class` |
 | Adoption rate | `review_outcome`, `task_class` |
 
+## Inner-loop artifacts
+
+Workflows emit JSON artifacts (envelope + `payload`) for nightly aggregation without gh-aw. Storage, naming, emitters, and required vs best-effort fields: [telemetry-artifacts.md](telemetry-artifacts.md).
+
 ## Validation
 
 ```bash
 node scripts/validate-telemetry.mjs "$(cat infra/samples/telemetry-payload.json)"
+node scripts/validate-telemetry.mjs "$(cat infra/samples/telemetry-artifact.json)"
 ```
 
-Collector or `scripts/validate-telemetry.mjs` should reject spans missing required fields when `HARNESS_STRICT_TELEMETRY=1`.
+Collector or `scripts/validate-telemetry.mjs` should reject spans missing required fields when `HARNESS_STRICT_TELEMETRY=1`. With strict mode, non-empty `placeholders` on artifacts also fails validation.
 
 ## PR context comment placeholders
 

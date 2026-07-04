@@ -41,6 +41,30 @@ export function buildProductJobs(stacks) {
     .join("\n\n");
 }
 
+const TELEMETRY_BASE_NEEDS = [
+  "harness-static",
+  "issue-spec-check",
+  "open-pr-limit",
+  "diff-size",
+  "detect-projects",
+];
+
+export function buildTelemetryNeeds(stacks) {
+  return [
+    ...TELEMETRY_BASE_NEEDS.map((job) => `      - ${job}`),
+    ...stacks.map((s) => `      - product-${s.id}`),
+  ].join("\n");
+}
+
+export function patchTelemetryNeeds(content, stacks) {
+  const needs = buildTelemetryNeeds(stacks);
+  const telemetryNeedsRe = /(  telemetry:\n[\s\S]*?    needs:\n)([\s\S]*?)(    steps:)/;
+  if (!telemetryNeedsRe.test(content)) {
+    return content;
+  }
+  return content.replace(telemetryNeedsRe, `$1${needs}\n$3`);
+}
+
 export function patchHarnessCi(content, stacks) {
   const outputs = buildDetectOutputs(stacks);
   const detectRun = buildDetectRun(stacks);
@@ -58,11 +82,17 @@ export function patchHarnessCi(content, stacks) {
   }
   patched = patched.replace(runRe, `$1${detectRun}\n$3`);
 
+  const productWithTelemetry = /(  product-ts:[\s\S]*?)(\n\n  telemetry:[\s\S]*)$/;
+  if (productWithTelemetry.test(patched)) {
+    patched = patched.replace(productWithTelemetry, `${productJobs}$2`);
+    return patchTelemetryNeeds(patched, stacks);
+  }
+
   const productRe = /(  product-ts:[\s\S]*)$/;
   if (!productRe.test(patched)) {
     throw new Error("harness-ci.yml: could not find product-* jobs block");
   }
-  patched = patched.replace(productRe, productJobs + "\n");
+  patched = patched.replace(productRe, `${productJobs}\n`);
 
-  return patched;
+  return patchTelemetryNeeds(patched, stacks);
 }

@@ -33,7 +33,7 @@ Three design conclusions:
 | E2E bench (executable acceptance checks) | **Partial** — 9 tasks; not yet break-and-fix agent runner |
 | `gh models eval` in CI | **Scaffolded** — runs when prompts exist; org must enable Models |
 | gh-aw outer loop (`nightly-harness-review`, `weekly-redteam`) | **Stub** — Markdown + lock.yml placeholders; does not compile with `gh aw compile`; deferred epic |
-| Langfuse / OTel export | **Scaffolded** — `infra/` + schema; wiring optional |
+| Langfuse / OTel export | **Scaffolded** — `infra/` + schema; inner-loop JSON artifacts wired |
 
 Operational details and thresholds live in companion docs — see [Documentation index](#11-related-documentation).
 
@@ -329,7 +329,7 @@ sequenceDiagram
 
 ### 5.4 Telemetry minimum schema
 
-Required span fields defined in [telemetry-schema.md](telemetry-schema.md). PR context comment surfaces repo + PR number for Langfuse lookup when `LANGFUSE_HOST` is configured.
+Required span fields defined in [telemetry-schema.md](telemetry-schema.md). Inner-loop workflows emit JSON artifacts per [telemetry-artifacts.md](telemetry-artifacts.md). PR context comment surfaces repo + PR number for Langfuse lookup when `LANGFUSE_HOST` is configured.
 
 ### 5.5 Reviewer checklist
 
@@ -514,6 +514,7 @@ Tracking template: [kpi-baseline.md](kpi-baseline.md).
 | [coding-agent-l1.md](coding-agent-l1.md) | First L1 delegations (docs / test-fix) |
 | [failure-taxonomy.md](failure-taxonomy.md) | Failure classification for outer loop |
 | [telemetry-schema.md](telemetry-schema.md) | Required observability fields |
+| [telemetry-artifacts.md](telemetry-artifacts.md) | Inner-loop JSON artifact format |
 | [auth-boundaries.md](auth-boundaries.md) | Credential matrix per execution mode |
 | [shared-config.md](shared-config.md) | Cross-repo harness distribution |
 | [kpi-baseline.md](kpi-baseline.md) | Weekly KPI template |

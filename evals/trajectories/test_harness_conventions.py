@@ -72,9 +72,11 @@ def test_change_size_limits_align_between_docs_and_gate():
 
 def test_telemetry_required_fields_align_with_validator():
     schema = read("docs/telemetry-schema.md")
-    validator = read("scripts/validate-telemetry.mjs")
+    lib = read("scripts/lib/telemetry-artifact.mjs")
     required = re.findall(r"^\| `([^`]+)` \|", schema, re.M)
-    validator_fields = re.findall(r'"([^"]+)"', validator.split("const REQUIRED = [", 1)[1].split("];", 1)[0])
+    match = re.search(r"export const TELEMETRY_REQUIRED_FIELDS = \[([\s\S]*?)\];", lib)
+    assert match, "TELEMETRY_REQUIRED_FIELDS not found in telemetry-artifact.mjs"
+    validator_fields = re.findall(r'"([^"]+)"', match.group(1))
     assert set(required) == set(validator_fields)
 
 

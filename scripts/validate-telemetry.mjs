@@ -1,29 +1,21 @@
 #!/usr/bin/env node
 /** Validate telemetry payload against docs/telemetry-schema.md required fields */
-const REQUIRED = [
-  "task_id",
-  "pr_number",
-  "repo",
-  "agent_type",
-  "execution_mode",
-  "model",
-  "task_class",
-  "autonomy_level",
-  "tool_calls",
-  "retry_count",
-  "wall_failure_type",
-  "cost",
-  "elapsed_time",
-  "changed_files",
-  "diff_loc",
-  "final_outcome",
-  "review_outcome",
-];
+import { missingRequiredFields, TELEMETRY_REQUIRED_FIELDS } from "./lib/telemetry-artifact.mjs";
 
-const payload = JSON.parse(process.argv[2] || "{}");
-const missing = REQUIRED.filter((k) => payload[k] === undefined || payload[k] === null);
+const raw = process.argv[2] || "{}";
+const parsed = JSON.parse(raw);
+const payload = parsed.payload ?? parsed;
+
+const missing = missingRequiredFields(payload);
 if (missing.length) {
   console.error("Missing telemetry fields:", missing.join(", "));
   process.exit(1);
 }
+
+if (process.env.HARNESS_STRICT_TELEMETRY === "1" && parsed.placeholders?.length) {
+  console.error("Strict telemetry: unresolved placeholders:", parsed.placeholders.join(", "));
+  process.exit(1);
+}
+
 console.log("Telemetry payload valid");
+console.log(`Required field count: ${TELEMETRY_REQUIRED_FIELDS.length}`);
