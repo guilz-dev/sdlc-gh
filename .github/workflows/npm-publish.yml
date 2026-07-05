@@ -25,7 +25,7 @@ jobs:
         run: |
           TAG="${{ github.event.release.tag_name }}"
           TAG="${TAG#v}"
-          PKG="$(node --input-type=module -e "import p from './package.json' with { type: 'json' }; console.log(p.default.version)")"
+          PKG="$(node --input-type=module -e "import p from './package.json' with { type: 'json' }; console.log(p.version)")"
           if [ "$TAG" != "$PKG" ]; then
             echo "Release tag ($TAG) must match package.json version ($PKG)" >&2
             exit 1
