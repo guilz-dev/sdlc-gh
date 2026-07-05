@@ -178,10 +178,11 @@ function runScript(repoRoot, scriptName, args) {
   });
 }
 
-/** @param {{ repoRoot: string, stackId: string, mode: string, owner: string, yes: boolean }} options */
+/** @param {{ repoRoot: string, stackId: string, mode: string, owner: string, yes: boolean, templateRoot?: string }} options */
 export function runBootstrap(options) {
-  const { repoRoot, stackId, mode, owner, yes } = options;
-  const scriptPath = join(repoRoot, "scripts/bootstrap-harness.sh");
+  const { repoRoot, stackId, mode, owner, yes, templateRoot } = options;
+  const root = templateRoot || repoRoot;
+  const scriptPath = join(root, "scripts/bootstrap-harness.sh");
   const args = [
     "--repo",
     repoRoot,
@@ -194,7 +195,7 @@ export function runBootstrap(options) {
   ];
   if (yes) args.push("--yes");
   return spawnSync("bash", [scriptPath, ...args], {
-    cwd: repoRoot,
+    cwd: root,
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
   });

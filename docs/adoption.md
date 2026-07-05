@@ -11,7 +11,14 @@ Apply this harness template to any repository.
 ## New repository
 
 1. Use **GitHub Template repository** → Create new repository from this template.
-2. Or run bootstrap:
+2. Or run the wizard (recommended):
+
+```bash
+cd /path/to/new-product
+npx @guilz-dev/sdlc-gh
+```
+
+3. Or run bootstrap manually, then wizard:
 
 ```bash
 git clone <harness-template-url> /tmp/harness
@@ -20,10 +27,7 @@ git clone <harness-template-url> /tmp/harness
   --stack ts \
   --mode new \
   --codeowners-team @your-org/harness-engineers
-cd /path/to/new-product
-./scripts/setup-github.sh --github-repo YOUR_ORG/new-product
-./scripts/doctor.mjs --strict
-git add -A && git commit -m "Add agent harness"
+cd /path/to/new-product && npx @guilz-dev/sdlc-gh --yes --stack ts --codeowners @your-org/harness-engineers
 ```
 
 3. Run `./scripts/setup-github.sh` to sync labels and create/update the `main-protection` ruleset.
@@ -75,8 +79,14 @@ gh-aw outer loop: use the **gh-aw dogfood track** ([gh-aw-dogfood.md](gh-aw-dogf
   --repo /path/to/existing \
   --codeowners-team @your-org/harness-engineers
 cd /path/to/existing
-./scripts/setup-github.sh --github-repo YOUR_ORG/existing
-./scripts/doctor.mjs --strict
+npx @guilz-dev/sdlc-gh --yes --stack ts --codeowners @your-org/harness-engineers
+```
+
+Or skip manual bootstrap entirely:
+
+```bash
+cd /path/to/existing
+npx @guilz-dev/sdlc-gh
 ```
 
 ## Stack selection

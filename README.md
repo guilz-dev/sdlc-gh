@@ -25,13 +25,35 @@ The full architecture and rationale live in [docs/arch.md](docs/arch.md).
 
 ## Quick start
 
-Requirements: a GitHub repository with Actions enabled; Node.js 22+ for the supported local setup flow and CI parity.
+Requirements: a GitHub repository with Actions enabled; Node.js 22+; `gh` CLI authenticated for GitHub setup.
+
+**Recommended — wizard in your product repo (no clone)**
+
+```bash
+cd /path/to/your-product
+npx @guilz-dev/sdlc-gh
+```
+
+The wizard bootstraps harness assets (if missing), syncs labels/rulesets, and runs `doctor --strict`. Non-interactive example:
+
+```bash
+npx @guilz-dev/sdlc-gh init --yes --stack ts --codeowners @your-org/harness-engineers --mode existing
+```
+
+New empty directory with sample stack copied to root:
+
+```bash
+mkdir my-product && cd my-product && git init
+npx @guilz-dev/sdlc-gh init --yes --stack ts --codeowners @your-org/harness-engineers --mode new --skip-github
+```
+
+Before the first npm release: `npx github:guilz-dev/sdlc-gh`. Local dev: `node scripts/sdlc-gh-cli.mjs`.
 
 **Option A — new repository from template (easiest)**
 
 Click **Use this template** on GitHub, delete the `sample/` stacks you don't need, and add your code.
 
-**Option B — add the harness to an existing repository**
+**Option B — add the harness to an existing repository (manual bootstrap)**
 
 ```bash
 git clone https://github.com/YOUR_ORG/sdlc-gh.git /tmp/sdlc-gh
@@ -41,9 +63,7 @@ git clone https://github.com/YOUR_ORG/sdlc-gh.git /tmp/sdlc-gh
   --codeowners-team @your-org/harness-engineers
 
 cd /path/to/your-product
-./scripts/setup-github.sh --github-repo YOUR_ORG/your-product
-./scripts/doctor.mjs --strict
-git add -A && git commit -m "Add agent harness from sdlc-gh"
+npx @guilz-dev/sdlc-gh --yes --stack ts --codeowners @your-org/harness-engineers
 ```
 
 **Option C — start a brand-new product**
@@ -56,8 +76,7 @@ git add -A && git commit -m "Add agent harness from sdlc-gh"
   --codeowners-team @your-org/harness-engineers
 
 cd /path/to/new-product
-./scripts/setup-github.sh --github-repo YOUR_ORG/new-product
-./scripts/doctor.mjs --strict
+npx @guilz-dev/sdlc-gh --yes --stack ts --codeowners @your-org/harness-engineers --mode new
 ```
 
 `--mode new` expands the minimal `sample/{stack}/` project into the repository root.
@@ -318,6 +337,7 @@ If you are contributing to the harness itself, read [CONTRIBUTING.md](CONTRIBUTI
 | [docs/telemetry-artifacts.md](docs/telemetry-artifacts.md) | Inner-loop JSON artifact format and storage |
 | [docs/gh-aw-dogfood.md](docs/gh-aw-dogfood.md) | Bounded gh-aw validation on sdlc-gh |
 | [docs/auth-boundaries.md](docs/auth-boundaries.md) | Credential boundaries per execution mode |
+| [docs/publishing.md](docs/publishing.md) | npm package release (`@guilz-dev/sdlc-gh`) |
 | [docs/shared-config.md](docs/shared-config.md) | Distributing shared assets across repositories |
 | [docs/exceptions/README.md](docs/exceptions/README.md) | Recording policy exceptions |
 | [infra/README.md](infra/README.md) | Self-hosting Langfuse / OTel |

@@ -12,6 +12,11 @@ import {
   SCRIPT_LIB_IMPORTS,
 } from "./lib/bootstrap-copy.mjs";
 import { CODEOWNERS_PLACEHOLDER, detectRepoProfile } from "./lib/setup-wizard.mjs";
+import {
+  NPM_PACKAGE_FILES,
+  validateNpmSampleCoverage,
+  validatePackageJsonFiles,
+} from "./lib/npm-package.mjs";
 
 const ROOT = process.cwd();
 let errors = 0;
@@ -157,6 +162,19 @@ for (const lib of BOOTSTRAP_LIB_FILES) {
   if (!bootstrapSh.includes(lib)) {
     fail(`bootstrap-harness.sh does not copy scripts/lib/${lib}`);
   }
+}
+
+const pkgFilesCheck = validatePackageJsonFiles(ROOT);
+if (!pkgFilesCheck.ok) {
+  fail(pkgFilesCheck.reason);
+}
+
+const npmCoverage = validateNpmSampleCoverage(ROOT);
+for (const entry of npmCoverage.missingOnDisk) {
+  fail(`npm package files entry missing on disk: ${entry}`);
+}
+for (const relPath of npmCoverage.notPacked) {
+  fail(`sample file not covered by npm files (${NPM_PACKAGE_FILES.length} entries): ${relPath}`);
 }
 
 const templateProfile = detectRepoProfile(ROOT);

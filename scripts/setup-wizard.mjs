@@ -20,6 +20,8 @@ import {
   suggestStack,
   writeHarnessStack,
 } from "./lib/setup-wizard.mjs";
+import { resolveTemplateRoot } from "./lib/template-root.mjs";
+import { postInstallHint } from "./lib/npm-package.mjs";
 
 function fail(message) {
   console.error(message);
@@ -52,6 +54,7 @@ function parseArgs(argv) {
     bootstrap: false,
     forceBootstrap: false,
     patchCodeowners: false,
+    templateRoot: "",
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -83,6 +86,8 @@ function parseArgs(argv) {
       args.bootstrap = true;
     } else if (value === "--patch-codeowners") {
       args.patchCodeowners = true;
+    } else if (value === "--template-root") {
+      args.templateRoot = argv[++i] ?? "";
     } else if (value === "--help" || value === "-h") {
       printUsage();
       process.exit(0);
@@ -112,8 +117,10 @@ Options:
   --force-bootstrap          Re-run bootstrap on an existing harness (overwrites assets)
   --dry-run                  Print plan; skip mutating GitHub and doctor
   --yes                      Non-interactive (requires stack + codeowners when configuring)
+  --template-root <path>     Harness template source (auto-detected when omitted)
 
 Examples:
+  npx @guilz-dev/sdlc-gh
   ./scripts/setup-wizard.mjs
   ./scripts/setup-wizard.mjs --template --yes --stack ts
   ./scripts/setup-wizard.mjs --yes --stack ts --codeowners @acme/platform
@@ -216,6 +223,19 @@ async function main() {
   const wantsBootstrap = args.bootstrap || args.forceBootstrap;
   const needsBootstrap = !profile.harnessPresent || wantsBootstrap;
 
+  if (args.templateRoot.trim()) {
+    process.env.SDLCGH_TEMPLATE_ROOT = args.templateRoot.trim();
+  }
+  let templateRoot = args.templateRoot.trim();
+  try {
+    templateRoot = resolveTemplateRoot({ fromModule: import.meta.url });
+  } catch (error) {
+    if (needsBootstrap) {
+      fail(error.message);
+    }
+    templateRoot = repoRoot;
+  }
+
   if (profile.harnessPresent && wantsBootstrap && !args.forceBootstrap) {
     fail(
       "Harness assets already present. Omit --bootstrap or pass --force-bootstrap to overwrite (destructive).",
@@ -241,6 +261,7 @@ async function main() {
     let stackId = args.stack;
     let owner = args.codeowners;
     let ranBootstrap = false;
+    let bootstrapMode = "";
 
     if (needsBootstrap) {
       if (args.forceBootstrap) {
@@ -249,14 +270,14 @@ async function main() {
         console.log("\nHarness assets not detected — bootstrap required.");
       }
       stackId = await resolveStack(rl, repoRoot, stackId, args.yes);
-      const mode = await resolveBootstrapMode(rl, repoRoot, args.mode, args.yes);
+      bootstrapMode = await resolveBootstrapMode(rl, repoRoot, args.mode, args.yes);
       owner = await resolveCodeowners(rl, owner, args.yes, true);
 
       const bootstrapSummary = [
         "Bootstrap summary",
         `  repo: ${repoRoot}`,
         `  stack: ${stackId}`,
-        `  mode: ${mode}`,
+        `  mode: ${bootstrapMode}`,
         `  CODEOWNERS: ${owner}`,
       ].join("\n");
 
@@ -271,9 +292,10 @@ async function main() {
         const bootstrapResult = runBootstrap({
           repoRoot,
           stackId,
-          mode,
+          mode: bootstrapMode,
           owner,
           yes: true,
+          templateRoot,
         });
         if (bootstrapResult.status !== 0) {
           console.error(bootstrapResult.stderr || bootstrapResult.stdout);
@@ -384,6 +406,14 @@ async function main() {
       console.log("Template repo: CODEOWNERS remains placeholder-only; commit .harness-stack is gitignored.");
     } else {
       console.log("Next: commit CODEOWNERS and open a test PR to verify required checks.");
+    }
+    if (ranBootstrap && bootstrapMode === "new") {
+      console.log(postInstallHint(stackId));
+    }
+    if (profile.harnessPresent && !ranBootstrap && templateRoot !== repoRoot) {
+      console.log(
+        "Harness already present — bootstrap was skipped. To refresh harness assets from a newer package, re-run with `--force-bootstrap` (destructive).",
+      );
     }
     console.log("Then: run `npm run check-l1-readiness` before starting spec-driven L1 delegation.");
   } finally {

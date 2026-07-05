@@ -16,6 +16,10 @@ That means contributions should be small, explicit, and easy to verify.
 - Keep changes focused; avoid bundling unrelated fixes
 - Do not commit secrets, credentials, or private repository metadata
 
+## npm release
+
+Maintainers: see [docs/publishing.md](docs/publishing.md) for `@guilz-dev/sdlc-gh` release steps and `NPM_TOKEN` setup.
+
 ## Development setup
 
 Requirements:

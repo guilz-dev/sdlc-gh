@@ -19,6 +19,8 @@ export const BOOTSTRAP_LIB_FILES = [
   "harness-review-routing.mjs",
   "gh-aw-dogfood.mjs",
   "setup-wizard.mjs",
+  "template-root.mjs",
+  "npm-package.mjs",
 ];
 
 export const BOOTSTRAP_SCRIPT_MJS = [
@@ -58,6 +60,9 @@ export const BOOTSTRAP_SCRIPT_MJS = [
   "doctor.mjs",
   "setup-github.mjs",
   "setup-wizard.mjs",
+  "sdlc-gh-cli.mjs",
+  "test-sdlc-gh-cli-scenarios.mjs",
+  "test-npm-package-scenarios.mjs",
   "trim-harness-ci.mjs",
 ];
 
@@ -93,8 +98,12 @@ export const SCRIPT_LIB_IMPORTS = {
   "test-e2e-manifest-scenarios.mjs": ["e2e-manifest.mjs"],
   "test-setup-github-scenarios.mjs": ["doctor-local.mjs", "github-config.mjs"],
   "test-doctor-scenarios.mjs": ["doctor-local.mjs"],
-  "setup-wizard.mjs": ["setup-wizard.mjs", "stacks.mjs"],
+  "setup-wizard.mjs": ["setup-wizard.mjs", "stacks.mjs", "npm-package.mjs"],
   "test-setup-wizard-scenarios.mjs": ["setup-wizard.mjs", "doctor-local.mjs"],
+  "sdlc-gh-cli.mjs": ["template-root.mjs"],
+  "test-sdlc-gh-cli-scenarios.mjs": ["template-root.mjs"],
+  "test-npm-package-scenarios.mjs": ["npm-package.mjs", "stacks.mjs"],
+  "validate-harness.mjs": ["npm-package.mjs", "stacks.mjs"],
   "emit-telemetry-artifact.mjs": ["telemetry-artifact.mjs", "ccsd-contract.mjs", "diff-size.mjs"],
   "validate-telemetry.mjs": ["telemetry-artifact.mjs"],
   "test-telemetry-artifact-scenarios.mjs": ["telemetry-artifact.mjs", "harness-ci-fragments.mjs"],

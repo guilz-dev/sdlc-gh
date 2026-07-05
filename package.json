@@ -1,13 +1,64 @@
 {
-  "name": "sdlc-gh",
+  "name": "@guilz-dev/sdlc-gh",
   "version": "0.1.0",
   "description": "GitHub Copilot agent harness template — CI walls, evals, and operations for coding agents",
   "license": "MIT",
   "private": false,
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guilz-dev/sdlc-gh.git"
+  },
+  "homepage": "https://github.com/guilz-dev/sdlc-gh#readme",
+  "bugs": {
+    "url": "https://github.com/guilz-dev/sdlc-gh/issues"
+  },
+  "keywords": [
+    "github-copilot",
+    "coding-agent",
+    "agent-harness",
+    "sdlc",
+    "ci",
+    "github-actions"
+  ],
+  "bin": {
+    "sdlc-gh": "./scripts/sdlc-gh-cli.mjs"
+  },
+  "files": [
+    "AGENTS.md",
+    "config",
+    "docs",
+    "evals",
+    "infra",
+    "prompts",
+    "scripts",
+    ".github",
+    "sample/go",
+    "sample/python",
+    "sample/ruby",
+    "sample/php/composer.json",
+    "sample/php/composer.lock",
+    "sample/php/phpunit.xml",
+    "sample/php/src",
+    "sample/php/tests",
+    "sample/ts/biome.json",
+    "sample/ts/package.json",
+    "sample/ts/package-lock.json",
+    "sample/ts/tsconfig.json",
+    "sample/ts/src",
+    "sample/ts/tests"
+  ],
   "scripts": {
+    "prepack": "npm run validate && npm run test-sdlc-gh-cli",
+    "prepublishOnly": "npm run check-e2e",
     "validate": "node scripts/validate-harness.mjs",
-    "check": "npm run validate && npm run test-hooks && npm run test-issue-spec && npm run test-diff-size && npm run test-e2e-manifest && npm run test-setup-github && npm run test-doctor && npm run test-telemetry-artifact && npm run test-harness-review && npm run test-harness-review-routing && npm run test-gh-aw-dogfood && npm run test-bootstrap-guidance && npm run test-merge-harness-package && npm run test-l1-readiness && npm run test-setup-wizard && npm run check-e2e && npm run run-e2e",
+    "check": "npm run validate && npm run test-hooks && npm run test-issue-spec && npm run test-diff-size && npm run test-e2e-manifest && npm run test-setup-github && npm run test-doctor && npm run test-telemetry-artifact && npm run test-harness-review && npm run test-harness-review-routing && npm run test-gh-aw-dogfood && npm run test-bootstrap-guidance && npm run test-merge-harness-package && npm run test-l1-readiness && npm run test-setup-wizard && npm run test-sdlc-gh-cli && npm run test-npm-package && npm run check-e2e && npm run run-e2e",
     "check-l1-readiness": "node scripts/check-l1-readiness.mjs",
     "check-e2e": "node scripts/check-e2e-manifest.mjs",
     "test-diff-size": "node scripts/test-diff-size-scenarios.mjs",
@@ -20,6 +71,8 @@
     "test-merge-harness-package": "node scripts/test-merge-harness-package-scenarios.mjs",
     "test-l1-readiness": "node scripts/test-l1-readiness-scenarios.mjs",
     "test-setup-wizard": "node scripts/test-setup-wizard-scenarios.mjs",
+    "test-sdlc-gh-cli": "node scripts/test-sdlc-gh-cli-scenarios.mjs",
+    "test-npm-package": "node scripts/test-npm-package-scenarios.mjs",
     "test-telemetry-artifact": "node scripts/test-telemetry-artifact-scenarios.mjs",
     "test-harness-review": "node scripts/test-harness-review-scenarios.mjs",
     "test-harness-review-routing": "node scripts/test-harness-review-routing-scenarios.mjs",

@@ -230,7 +230,8 @@ print_next_step() {
     setup_cmd="./scripts/setup-wizard.mjs --yes --stack $STACK --codeowners $CODEOWNERS_TEAM --github-repo OWNER/REPO"
   fi
 
-  echo "Next: $setup_cmd"
+  echo "Next: npx @guilz-dev/sdlc-gh --yes --stack $STACK --codeowners $CODEOWNERS_TEAM"
+  echo "      Or: $setup_cmd"
   echo "      Or: ./scripts/setup-github.sh --yes (after reviewing CODEOWNERS and .harness-stack)"
   echo "      Replace OWNER/REPO with your GitHub repository if auto-detection is unavailable."
 }
@@ -361,14 +362,14 @@ for s in validate-harness.mjs check-diff-size.mjs check-issue-spec.mjs select-ev
   test-diff-size-scenarios.mjs test-e2e-manifest-scenarios.mjs test-setup-github-scenarios.mjs test-doctor-scenarios.mjs \
   test-telemetry-artifact-scenarios.mjs test-harness-review-scenarios.mjs test-harness-review-routing-scenarios.mjs test-gh-aw-dogfood-scenarios.mjs \
   test-bootstrap-guidance-scenarios.mjs test-merge-harness-package-scenarios.mjs test-l1-readiness-scenarios.mjs test-setup-wizard-scenarios.mjs \
-  harness-drift-report.mjs check-eval-score-drift.mjs run-e2e-bench.mjs doctor.mjs setup-github.mjs setup-wizard.mjs; do
+  harness-drift-report.mjs check-eval-score-drift.mjs run-e2e-bench.mjs doctor.mjs setup-github.mjs setup-wizard.mjs sdlc-gh-cli.mjs test-npm-package-scenarios.mjs; do
   cp "$TEMPLATE_ROOT/scripts/$s" "$REPO/scripts/" 2>/dev/null || true
 done
 for s in bootstrap-harness.sh setup-github.sh verify-bootstrap-stacks.sh; do
   cp "$TEMPLATE_ROOT/scripts/$s" "$REPO/scripts/" 2>/dev/null || true
 done
 for s in stacks.mjs harness-ci-fragments.mjs ccsd-contract.mjs github-config.mjs diff-size.mjs e2e-manifest.mjs \
-  doctor-local.mjs bootstrap-copy.mjs l1-readiness.mjs merge-harness-package.mjs telemetry-artifact.mjs harness-review.mjs harness-review-routing.mjs gh-aw-dogfood.mjs setup-wizard.mjs; do
+  doctor-local.mjs bootstrap-copy.mjs l1-readiness.mjs merge-harness-package.mjs telemetry-artifact.mjs harness-review.mjs harness-review-routing.mjs gh-aw-dogfood.mjs setup-wizard.mjs template-root.mjs npm-package.mjs; do
   cp "$TEMPLATE_ROOT/scripts/lib/$s" "$REPO/scripts/lib/" 2>/dev/null || true
 done
 cp "$TEMPLATE_ROOT/scripts/trim-harness-ci.mjs" "$REPO/scripts/" 2>/dev/null || true

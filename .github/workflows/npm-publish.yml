@@ -1,0 +1,49 @@
+name: npm publish
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: https://registry.npmjs.org
+
+      - name: Verify package version matches release tag
+        if: github.event_name == 'release'
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          TAG="${TAG#v}"
+          PKG="$(node --input-type=module -e "import p from './package.json' with { type: 'json' }; console.log(p.default.version)")"
+          if [ "$TAG" != "$PKG" ]; then
+            echo "Release tag ($TAG) must match package.json version ($PKG)" >&2
+            exit 1
+          fi
+
+      - name: Validate package contents
+        run: |
+          npm run validate
+          npm run test-sdlc-gh-cli
+          npm run test-setup-wizard
+          npm pack --dry-run
+
+      - name: Publish to npm (dry run)
+        if: github.event_name == 'workflow_dispatch'
+        run: npm publish --dry-run --provenance --access public
+
+      - name: Publish to npm
+        if: github.event_name == 'release'
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
