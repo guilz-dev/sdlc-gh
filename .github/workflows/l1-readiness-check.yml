@@ -15,7 +15,6 @@ on:
 permissions:
   contents: read
   actions: read
-  administration: read
 
 jobs:
   l1-readiness:
