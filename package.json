@@ -1,6 +1,6 @@
 {
   "name": "@guilz-dev/sdlc-gh",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "GitHub Copilot agent harness template — CI walls, evals, and operations for coding agents",
   "license": "MIT",
   "private": false,
@@ -28,7 +28,7 @@
     "github-actions"
   ],
   "bin": {
-    "sdlc-gh": "./scripts/sdlc-gh-cli.mjs"
+    "sdlc-gh": "scripts/sdlc-gh-cli.mjs"
   },
   "files": [
     "AGENTS.md",
