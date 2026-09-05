@@ -32,10 +32,13 @@ export const DOGFOOD_ALLOWED_PATH_PREFIXES = [
   ".github/labels.yml",
   ".github/aw/",
   "scripts/lib/gh-aw-dogfood.mjs",
+  "scripts/lib/gh-aw-lock-schedule.mjs",
   "scripts/check-gh-aw-dogfood-scope.mjs",
+  "scripts/check-gh-aw-lock-schedule.mjs",
   "scripts/validate-gh-aw-compile.mjs",
   "scripts/emit-gh-aw-dogfood-report.mjs",
   "scripts/test-gh-aw-dogfood-scenarios.mjs",
+  "scripts/test-gh-aw-lock-schedule-scenarios.mjs",
   "docs/gh-aw-dogfood.md",
   "docs/nightly-harness-review.md",
   "infra/samples/gh-aw-dogfood-report.json",
@@ -46,6 +49,7 @@ export const DOGFOOD_EVALUATION_CRITERIA = [
   "safe_outputs",
   "compile",
   "lock_drift",
+  "lock_schedule",
   "reviewability",
 ];
 
@@ -248,6 +252,7 @@ export function buildDogfoodReport({
   safeOutputs = {},
   compile = { ok: true, skipped: false, issues: [] },
   lockDrift = { ok: true, issues: [] },
+  lockSchedule = { ok: true, issues: [] },
   repo = "unknown/unknown",
 }) {
   const safeOk = Object.values(safeOutputs).every((r) => r.ok);
@@ -266,8 +271,17 @@ export function buildDogfoodReport({
       pass: lockDrift.ok,
       issues: lockDrift.issues ?? [],
     },
+    lock_schedule: {
+      pass: lockSchedule.ok,
+      issues: lockSchedule.issues ?? [],
+    },
     reviewability: {
-      pass: scope.ok && safeOk && lockDrift.ok && (compile.ok || compile.skipped),
+      pass:
+        scope.ok &&
+        safeOk &&
+        lockDrift.ok &&
+        lockSchedule.ok &&
+        (compile.ok || compile.skipped),
       note: "Outputs limited to PRs, summaries, compile results, or issues — no auto-merge",
     },
   };

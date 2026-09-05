@@ -68,7 +68,18 @@ const reportCompileSkipped = buildDogfoodReport({
   safeOutputs: { nightly: { ok: true, issues: [] } },
   compile: { ok: false, skipped: true, issues: ["gh aw CLI not available"] },
   lockDrift: { ok: true, issues: [] },
+  lockSchedule: { ok: true, issues: [] },
 });
 assert.equal(reportCompileSkipped.pass, true);
+
+const reportLockScheduleFail = buildDogfoodReport({
+  scope: { ok: true, issues: [] },
+  safeOutputs: { nightly: { ok: true, issues: [] } },
+  compile: { ok: true, skipped: false, issues: [] },
+  lockDrift: { ok: true, issues: [] },
+  lockSchedule: { ok: false, issues: ["bad.lock.yml: schedule forbidden"] },
+});
+assert.equal(reportLockScheduleFail.pass, false);
+assert.equal(reportLockScheduleFail.criteria.lock_schedule.pass, false);
 
 console.log("gh-aw-dogfood scenarios ok");

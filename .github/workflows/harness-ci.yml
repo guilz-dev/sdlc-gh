@@ -71,6 +71,12 @@ jobs:
       - name: gh-aw dogfood scenario tests
         run: node scripts/test-gh-aw-dogfood-scenarios.mjs
 
+      - name: gh-aw lock schedule check
+        run: node scripts/check-gh-aw-lock-schedule.mjs
+
+      - name: gh-aw lock schedule scenario tests
+        run: node scripts/test-gh-aw-lock-schedule-scenarios.mjs
+
   issue-spec-check:
     name: issue-spec-check
     runs-on: ubuntu-latest

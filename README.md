@@ -133,7 +133,7 @@ npm run check-l1-readiness -- --strict
 
 3. Create an Issue from `.github/ISSUE_TEMPLATE/task.yml`
 4. Fill `Goal`, `Non-goals`, `Constraints`, `Acceptance criteria`, `Rollback hints`
-5. Confirm the synced labels (`task:docs` or `task:test-fix`) + `autonomy:L1`
+5. Confirm the synced labels (`task:docs`, `task:test-fix`, or `task:migration-step`) + `autonomy:L1`
 6. Assign `triager`, then `implementer`
 
 Readiness checker notes:
@@ -201,7 +201,7 @@ sequenceDiagram
     end
 ```
 
-For `task:docs` and `task:test-fix` at `autonomy:L1`, the Issue embeds a lightweight CC-SD contract (`Goal`, `Non-goals`, `Constraints`, `Acceptance criteria`, `Rollback hints`). v1 does not cover `feature-small` or higher-risk classes. Details: [docs/coding-agent-l1.md](docs/coding-agent-l1.md).
+For `task:docs`, `task:test-fix`, or `task:migration-step` at `autonomy:L1`, the Issue embeds a lightweight CC-SD contract (`Goal`, `Non-goals`, `Constraints`, `Acceptance criteria`, `Rollback hints`). v1 does not cover `feature-small` or higher-risk classes. Details: [docs/coding-agent-l1.md](docs/coding-agent-l1.md).
 
 On CI failure, `agent-retry-orchestrator` applies retry labels (max 3 attempts; stops after the same failure signature twice; security failures escalate immediately). Canonical thresholds live in [docs/operations.md](docs/operations.md).
 
@@ -242,7 +242,7 @@ Don't enable everything at once. Canonical phase definitions (including Phase 0 
 | 1 | instructions, agents, hooks, templates | Low |
 | 2 | `harness-ci` + your stack's `product-ci` | Medium |
 | 3 | `eval-ci` + optional eval ruleset | Medium |
-| 4 | coding agent L1 (`task:docs` / `task:test-fix` only) | Low–Medium |
+| 4 | coding agent L1 (`task:docs` / `task:test-fix` / `task:migration-step`) | Low–Medium |
 
 Getting started with L1 delegation: [docs/coding-agent-l1.md](docs/coding-agent-l1.md).
 
@@ -326,12 +326,14 @@ If you are contributing to the harness itself, read [CONTRIBUTING.md](CONTRIBUTI
 
 | Document | Contents |
 |----------|----------|
+| [docs/migration-track.md](docs/migration-track.md) | Phased upgrades (migration track + migrate-plan CLI) |
 | [docs/arch.md](docs/arch.md) | Full architecture and design principles |
 | [docs/adoption.md](docs/adoption.md) | Installation and rollback |
 | [docs/operations.md](docs/operations.md) | Thresholds, retry policy, forbidden ops (**canonical** policy) |
 | [docs/revert-playbook.md](docs/revert-playbook.md) | Revert procedure (harness vs product) |
 | [docs/coding-agent-l1.md](docs/coding-agent-l1.md) | Running the first L1 delegations |
 | [docs/failure-taxonomy.md](docs/failure-taxonomy.md) | Classifying failures for outer-loop routing |
+| [docs/outer-loop-implementation-plan.md](docs/outer-loop-implementation-plan.md) | Code quality outer loop — implementation plan (v0.2.0+) |
 | [docs/kpi-baseline.md](docs/kpi-baseline.md) | Weekly KPI tracking template |
 | [docs/telemetry-schema.md](docs/telemetry-schema.md) | Required observability fields |
 | [docs/telemetry-artifacts.md](docs/telemetry-artifacts.md) | Inner-loop JSON artifact format and storage |

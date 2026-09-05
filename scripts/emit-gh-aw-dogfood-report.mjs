@@ -13,6 +13,7 @@ import {
   parseDogfoodLabels,
   parseGhAwLockMetadata,
 } from "./lib/gh-aw-dogfood.mjs";
+import { findLockScheduleViolations } from "./lib/gh-aw-lock-schedule.mjs";
 
 export const DOGFOOD_REPORT_DIR = "dogfood-report";
 
@@ -85,6 +86,11 @@ function evaluateCompile() {
   return { ok: issues.length === 0, skipped: false, issues };
 }
 
+function evaluateLockSchedule() {
+  const result = findLockScheduleViolations(process.cwd());
+  return { ok: result.ok, issues: result.violations };
+}
+
 function main() {
   const safeOutputs = evaluateSafeOutputsForWorkflows((path) => readFileSync(path, "utf8"));
   const report = buildDogfoodReport({
@@ -93,6 +99,7 @@ function main() {
     safeOutputs,
     compile: evaluateCompile(),
     lockDrift: evaluateLockMetadata(),
+    lockSchedule: evaluateLockSchedule(),
   });
 
   const outDir = process.env.DOGFOOD_REPORT_DIR || DOGFOOD_REPORT_DIR;
