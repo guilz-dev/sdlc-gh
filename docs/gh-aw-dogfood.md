@@ -30,11 +30,11 @@ High-signal validation of:
 |------|-------|
 | gh-aw sources | `.github/workflows/nightly-harness-review.md`, `.github/workflows/weekly-redteam.md` |
 | Compiled locks | corresponding `*.lock.yml` |
-| Tooling | `scripts/lib/gh-aw-dogfood.mjs`, `scripts/check-gh-aw-dogfood-scope.mjs`, `scripts/validate-gh-aw-compile.mjs`, `scripts/emit-gh-aw-dogfood-report.mjs`, `scripts/test-gh-aw-dogfood-scenarios.mjs` |
+| Tooling | `scripts/lib/gh-aw-dogfood.mjs`, `scripts/lib/gh-aw-lock-schedule.mjs`, `scripts/check-gh-aw-dogfood-scope.mjs`, `scripts/check-gh-aw-lock-schedule.mjs`, `scripts/validate-gh-aw-compile.mjs`, `scripts/emit-gh-aw-dogfood-report.mjs`, `scripts/test-gh-aw-dogfood-scenarios.mjs`, `scripts/test-gh-aw-lock-schedule-scenarios.mjs` |
 | CI | `.github/workflows/gh-aw-dogfood-ci.yml` |
 | Labels | `.github/labels.yml` (when adding or updating `task:gh-aw-dogfood`) |
 | AW pins | `.github/aw/actions-lock.json` |
-| Docs | `docs/gh-aw-dogfood.md`, `docs/nightly-harness-review.md` (gh-aw contract sections only) |
+| Docs | `docs/gh-aw-dogfood.md`, `docs/nightly-harness-review.md` (gh-aw contract sections only), `docs/outer-loop-implementation-plan.md` (E0 sections) |
 
 PRs with `task:gh-aw-dogfood` **fail CI** if any changed file is outside this list.
 
@@ -48,9 +48,32 @@ Recorded in `dogfood-report/gh-aw-dogfood-report.json` (sample: [infra/samples/g
 | **safe_outputs** | `create-pull-request.max <= 1`; no forbidden auto-merge outputs |
 | **compile** | `gh aw compile` succeeds for each source workflow when CLI is present |
 | **lock_drift** | `.lock.yml` has `gh-aw-metadata` header; byte-level drift is caught by **compile** |
+| **lock_schedule** | Compiled `*.lock.yml` must not define `on.schedule` (GHA is the scheduled baseline) |
 | **reviewability** | Above gates pass; outputs remain PRs/summaries/issues only |
 
 Set `GH_AW_COMPILE_REQUIRED=1` in CI to hard-fail when `gh aw` is missing (default: skip with warning).
+
+`node scripts/check-gh-aw-lock-schedule.mjs` runs in harness-ci to ensure compiled locks stay `workflow_dispatch`-only while GHA owns schedules.
+
+## Staged inputs pattern (outer loop B)
+
+Future **code quality outer loop** workflows (`daily-code-review.md`) must follow the same contract as [nightly-harness-review.md](../.github/workflows/nightly-harness-review.md):
+
+1. Deterministic GHA `on.steps` fetch and aggregate data
+2. Stage artifacts under `/tmp/gh-aw/base/` before the agent runs
+3. Agent reads staged JSON only — no in-agent `gh api` or artifact download
+4. Issue routing stays in GHA (`route-code-review.mjs`); gh-aw emits `findings.json` only
+
+See [outer-loop-implementation-plan.md](outer-loop-implementation-plan.md) (Epic E0–E3).
+
+## Shared gh-aw fragments
+
+Reusable policy and taxonomy live under `.github/aw/shared/`:
+
+- `policy-guards.md` — roles, safe-output defaults, cost/network guards
+- `taxonomy.md` — failure classes for harness and code-review outer loops
+
+New gh-aw `.md` workflows should `imports:` these fragments. Until schedule promotion criteria pass, sources stay **`workflow_dispatch` only**; recompile locks after frontmatter changes.
 
 ## Explicit constraints (Issue #7)
 
@@ -99,6 +122,8 @@ Trigger rollback when:
 
 ```bash
 node scripts/test-gh-aw-dogfood-scenarios.mjs
+node scripts/test-gh-aw-lock-schedule-scenarios.mjs
+node scripts/check-gh-aw-lock-schedule.mjs
 node scripts/validate-gh-aw-compile.mjs   # requires gh aw
 ```
 

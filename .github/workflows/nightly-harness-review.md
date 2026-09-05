@@ -1,12 +1,57 @@
 ---
 description: Nightly harness review — classify failures and propose harness revisions.
 name: Nightly harness review
+imports:
+  - ../aw/shared/policy-guards.md
+  - ../aw/shared/taxonomy.md
 on:
-  schedule:
-    - cron: "0 2 * * *"
+  workflow_dispatch:
+  roles:
+    - admin
+    - maintainer
+    - write
+  stop-after: 2027-01-01
+  permissions:
+    actions: read
+    contents: read
+  steps:
+    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+    - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      with:
+        node-version: "22"
+    - name: Fetch telemetry artifacts
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        WINDOW_HOURS: "24"
+        TELEMETRY_COLLECT_DIR: telemetry-collected
+      run: node scripts/fetch-telemetry-artifacts.mjs
+    - name: Aggregate and classify failures
+      env:
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        WINDOW_HOURS: "24"
+        TELEMETRY_COLLECT_DIR: telemetry-collected
+        HARNESS_REVIEW_OUT_DIR: harness-review
+      run: node scripts/aggregate-harness-review.mjs
+    - name: Stage prepared inputs for agent
+      run: |
+        mkdir -p /tmp/gh-aw/base
+        rm -rf /tmp/gh-aw/base/telemetry-collected /tmp/gh-aw/base/harness-review
+        cp -R telemetry-collected /tmp/gh-aw/base/telemetry-collected
+        cp -R harness-review /tmp/gh-aw/base/harness-review
 permissions:
   contents: read
+  actions: read
   issues: read
+engine:
+  id: copilot
+  model: claude-sonnet-4.6
+network:
+  allowed:
+    - defaults
+    - github
+timeout-minutes: 20
+max-ai-credits: 500
 safe-outputs:
   create-pull-request:
     max: 1
@@ -22,10 +67,10 @@ safe-outputs:
 
 | Input | Source | Required |
 |-------|--------|----------|
-| Telemetry JSON artifacts | Inner-loop workflows (`harness-ci`, `eval-ci`, retry, PR context) | yes |
-| Aggregation window | Default 24h; match GHA `WINDOW_HOURS` | yes |
+| Prepared telemetry workspace | `/tmp/gh-aw/base/telemetry-collected/` staged by deterministic `on.steps` | yes |
+| Prepared harness review summary | `/tmp/gh-aw/base/harness-review/harness-review-summary.json` staged by deterministic `on.steps` | yes |
 | Failure taxonomy | [docs/failure-taxonomy.md](../../docs/failure-taxonomy.md) | yes |
-| Harness review summary | `harness-review/harness-review-summary.json` from GHA aggregator | yes when chaining |
+| Aggregation window | Fixed 24h to match the current GHA baseline | yes |
 
 ## Forbidden operations
 
@@ -76,11 +121,13 @@ Promote gh-aw execution only when **all** hold:
 - GHA nightly review and gh-aw classification outputs agree on fixture summaries
 - `create-pull-request.max` remains `1` and no forbidden safe-outputs appear
 
-Until then, treat this file as the **specification** and GHA as the **runtime**.
+Until then, treat this file as the **specification** and GHA as the **runtime**. This source stays `workflow_dispatch`-only while dogfood is active.
 
 ## Agent instructions
 
 Analyze failure traces per [docs/failure-taxonomy.md](../../docs/failure-taxonomy.md).
+
+Read `/tmp/gh-aw/base/harness-review/harness-review-summary.json` and supporting files under `/tmp/gh-aw/base/telemetry-collected/` that were staged by deterministic `on.steps`. Do **not** fetch artifacts or re-run aggregation from inside the agent.
 
 When repeated **FF不足** or **壁不足** patterns appear in the summary JSON, ensure routed issues exist (GHA runs `scripts/route-harness-review.mjs`) or propose a harness revision PR with eval / instruction diffs only.
 
